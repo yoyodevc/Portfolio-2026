@@ -172,7 +172,7 @@ export function Projects() {
         className="mb-12"
       >
         <p className="text-sm font-mono text-[var(--color-accent)] mb-3 tracking-wide">Projects</p>
-        <h2 className="font-display text-3xl font-semibold text-[var(--color-text)] flex items-baseline gap-3 flex-wrap">
+        <h2 className="font-display text-3xl font-semibold text-[var(--color-text)] flex flex-col md:flex-row md:items-baseline gap-1 md:gap-3">
           Personal projects.
           <Typewriter text="work in progress" className="text-[var(--color-accent)] text-xl font-mono font-normal" />
         </h2>

@@ -20,12 +20,21 @@ export function Hero() {
 
   useEffect(() => {
     if (shouldReduceMotion) return;
+    let frame = 0;
     function handleMouseMove(e: MouseEvent) {
-      document.documentElement.style.setProperty('--glow-x', `${e.clientX}px`);
-      document.documentElement.style.setProperty('--glow-y', `${e.clientY}px`);
+      // Coalesce style writes to one per frame
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        document.documentElement.style.setProperty('--glow-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--glow-y', `${e.clientY}px`);
+        frame = 0;
+      });
     }
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, [shouldReduceMotion]);
 
   return (

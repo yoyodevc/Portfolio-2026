@@ -12,7 +12,7 @@ interface CardData {
 const CARDS: CardData[] = [
   {
     id: 0,
-    src: '/assets/cropped.webp',
+    src: '/assets/MEITU_20250722_122326242.webp',
     alt: 'John Fredrick — portrait',
     bg: 'bg-[var(--color-surface)]',
   },
@@ -30,7 +30,7 @@ const CARDS: CardData[] = [
   },
   {
     id: 3,
-    src: '/assets/MEITU_20250722_122326242.webp',
+    src: '/assets/cropped.webp',
     alt: 'John Fredrick',
     bg: 'bg-[var(--color-surface)]',
   },
