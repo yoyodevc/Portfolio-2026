@@ -37,6 +37,48 @@ export function Nav() {
 
   const isDark = theme === 'dark';
 
+  const themeToggle = (
+    <button
+      onClick={toggleTheme}
+      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      role="switch"
+      aria-checked={isDark}
+      className="flex items-center gap-2"
+    >
+      <Sun
+        size={13}
+        className={cn(
+          'transition-colors duration-200',
+          isDark ? 'text-[var(--color-muted)]' : 'text-[var(--color-accent)]',
+        )}
+      />
+      <span
+        className={cn(
+          'relative inline-flex h-[22px] w-[38px] shrink-0 rounded-full',
+          'transition-colors duration-300 ease-in-out',
+          isDark
+            ? 'bg-[var(--color-accent)]'
+            : 'bg-[color-mix(in_srgb,var(--color-text)_20%,transparent)]',
+        )}
+      >
+        <span
+          className={cn(
+            'pointer-events-none absolute top-[2px] left-[2px] h-[18px] w-[18px] rounded-full bg-white shadow-md',
+            'transition-transform duration-300 ease-in-out',
+            isDark ? 'translate-x-[16px]' : 'translate-x-0',
+          )}
+        />
+      </span>
+      <Moon
+        size={13}
+        className={cn(
+          'transition-colors duration-200',
+          isDark ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)]',
+        )}
+      />
+    </button>
+  );
+
   return (
     <header
       className={cn(
@@ -53,7 +95,8 @@ export function Nav() {
           JFL
         </a>
 
-        <nav className="flex items-center gap-6">
+        {/* Desktop nav */}
+        <nav className="hidden sm:flex items-center gap-6">
           {navLinks.map(({ label, href }) => (
             <a
               key={label}
@@ -63,51 +106,13 @@ export function Nav() {
               {label}
             </a>
           ))}
-
-          <button
-            onClick={toggleTheme}
-            aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-            role="switch"
-            aria-checked={isDark}
-            className="flex items-center gap-2"
-          >
-            <Sun
-              size={13}
-              className={cn(
-                'transition-colors duration-200',
-                isDark ? 'text-[var(--color-muted)]' : 'text-[var(--color-accent)]',
-              )}
-            />
-
-            {/* Track */}
-            <span
-              className={cn(
-                'relative inline-flex h-[22px] w-[38px] shrink-0 rounded-full',
-                'transition-colors duration-300 ease-in-out',
-                isDark
-                  ? 'bg-[var(--color-accent)]'
-                  : 'bg-[color-mix(in_srgb,var(--color-text)_20%,transparent)]',
-              )}
-            >
-              {/* Thumb */}
-              <span
-                className={cn(
-                  'pointer-events-none absolute top-[2px] left-[2px] h-[18px] w-[18px] rounded-full bg-white shadow-md',
-                  'transition-transform duration-300 ease-in-out',
-                  isDark ? 'translate-x-[16px]' : 'translate-x-0',
-                )}
-              />
-            </span>
-
-            <Moon
-              size={13}
-              className={cn(
-                'transition-colors duration-200',
-                isDark ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)]',
-              )}
-            />
-          </button>
+          {themeToggle}
         </nav>
+
+        {/* Mobile: theme toggle only */}
+        <div className="flex sm:hidden items-center">
+          {themeToggle}
+        </div>
       </div>
     </header>
   );
