@@ -24,7 +24,7 @@ export const education: Education[] = [
     period: "2021 — 2025",
     location: "Zamboanga, PH",
     description:
-      "Graduated with a focus on software engineering fundamentals, algorithms, and systems programming. Completed a capstone project on a remote real-time monitoring system and automated egg incubator .",
+      "Graduated with a focus on software engineering fundamentals, algorithms, and systems programming. Completed a capstone project on a remote real-time monitoring system and automated egg incubator.",
     highlights: [
       "Best Capstone Award - Hatchify: Real-time Egg Incubator Monitoring and Alert system",
       "Developed a Mobile Appliication Software and IoT Hardware for poultry solutions",

@@ -103,7 +103,7 @@ export const projects: Project[] = [
     tagline: "Private calculator with on-device history and a clean, distraction-free design.",
     description:
     "A privacy-first calculator that keeps every calculation and history entry stored locally on your device—nothing is uploaded, tracked, or shared. Features a minimalist interface with subtle glassmorphism accents, instant performance, and searchable calculation history, making everyday math fast, elegant, and completely private.",
-    stack: ["React", "TypeScript", "Tailwind CSS", "Motion"],
+    stack: ["React", "TypeScript", "Tailwind CSS", "LocalStorage"],
     status: "live",
     cover: "/assets/calculator.webp",
     coverAlt: "Calculator",

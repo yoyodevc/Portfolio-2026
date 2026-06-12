@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'motion/react';
 import { ExternalLink, Code2 } from 'lucide-react';
 import { Tag } from '../ui/Tag';
@@ -7,6 +7,61 @@ import { featuredProjects } from '../../data/projects';
 import type { Project } from '../../data/projects';
 
 const EASE = [0, 0, 0.2, 1] as const;
+
+function Typewriter({ text, className }: { text: string; className?: string }) {
+  const [displayed, setDisplayed] = useState('');
+  const [started, setStarted] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
+
+  useEffect(() => {
+    if (isInView && !started) setStarted(true);
+  }, [isInView, started]);
+
+  useEffect(() => {
+    if (!started) return;
+
+    let current = 0;
+    let deleting = false;
+    // Keep at least the first character ("w") when deleting
+    const minLength = 1;
+
+    const tick = () => {
+      if (!deleting) {
+        current++;
+        setDisplayed(text.slice(0, current));
+        if (current >= text.length) {
+          deleting = true;
+          return 1200; // pause before deleting
+        }
+        return 80;
+      } else {
+        current--;
+        setDisplayed(text.slice(0, current));
+        if (current <= minLength) {
+          deleting = false;
+          return 400; // pause before retyping
+        }
+        return 45;
+      }
+    };
+
+    let timeout: ReturnType<typeof setTimeout>;
+    const run = () => {
+      const delay = tick();
+      timeout = setTimeout(run, delay);
+    };
+    timeout = setTimeout(run, 80);
+    return () => clearTimeout(timeout);
+  }, [started, text]);
+
+  return (
+    <span ref={ref} className={className}>
+      {displayed}
+      <span className="animate-[blink_1s_step-end_infinite]">|</span>
+    </span>
+  );
+}
 
 function ProjectLinks({ project }: { project: Project }) {
   return (
@@ -79,13 +134,14 @@ function BentoCard({
             >
               {project.title}
             </h3>
-            <p className="text-sm text-[var(--color-muted)]">{project.tagline}</p>
           </div>
           <ProjectLinks project={project} />
         </div>
 
+        <p className="text-sm text-[var(--color-muted)] text-justify mb-2">{project.tagline}</p>
+
         {large && (
-          <p className="text-sm text-[var(--color-muted)] leading-relaxed mt-2 mb-4">
+          <p className="text-sm text-[var(--color-muted)] leading-relaxed mb-4 text-justify">
             {project.description}
           </p>
         )}
@@ -116,8 +172,9 @@ export function Projects() {
         className="mb-12"
       >
         <p className="text-sm font-mono text-[var(--color-accent)] mb-3 tracking-wide">Projects</p>
-        <h2 className="font-display text-3xl font-semibold text-[var(--color-text)]">
+        <h2 className="font-display text-3xl font-semibold text-[var(--color-text)] flex items-baseline gap-3 flex-wrap">
           Personal projects.
+          <Typewriter text="work in progress" className="text-[var(--color-accent)] text-xl font-mono font-normal" />
         </h2>
       </motion.div>
 

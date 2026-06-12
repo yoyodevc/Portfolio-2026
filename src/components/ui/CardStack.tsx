@@ -86,12 +86,12 @@ export function CardStack() {
         return (
           <motion.div
             key={card.id}
+            style={{ zIndex: slot.zIndex }}
             animate={{
               x: slot.x,
               y: slot.y,
               rotate: slot.rotate,
               scale: slot.scale,
-              zIndex: slot.zIndex,
             }}
             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
             className={cn(
@@ -106,7 +106,7 @@ export function CardStack() {
                 alt={card.alt}
                 width={440}
                 height={560}
-                loading="lazy"
+                loading={i === 0 ? 'eager' : 'lazy'}
                 className="w-full h-full object-cover"
               />
             ) : (

@@ -7,13 +7,13 @@ import { ContactModal } from '../ui/ContactModal';
 const links = [
   {
     label: 'GitHub',
-    href: '#',
+    href: 'https://github.com/yoyodevc',
     icon: Code2,
     description: 'My GitHub',
   },
   {
     label: 'LinkedIn',
-    href: '#',
+    href: 'https://www.linkedin.com/in/johnfredricklim/',
     icon: Briefcase,
     description: 'My LinkedIn',
   },

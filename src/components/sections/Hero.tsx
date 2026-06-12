@@ -52,8 +52,9 @@ export function Hero() {
             {...fadeUp(0.2)}
             className="text-lg text-[var(--color-muted)] max-w-xl leading-relaxed mb-10"
           >
-            Full-stack and mobile engineer who cares about the space between the code and the person
-            using it. I build products that are fast, accessible, and worth trusting.
+            Tech enthusiast who loves learning and building things. I explore web and mobile
+            development with a curiosity that keeps me chasing better tools, better craft, and
+            experiences worth caring about.
           </motion.p>
 
           <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3">

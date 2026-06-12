@@ -19,9 +19,9 @@ export default function App() {
         <div className="border-t border-[var(--color-border)]" />
         <Experience />
         <div className="border-t border-[var(--color-border)]" />
-        <Projects />
-        <div className="border-t border-[var(--color-border)]" />
         <Education />
+        <div className="border-t border-[var(--color-border)]" />
+        <Projects />
         <div className="border-t border-[var(--color-border)]" />
         <Contact />
       </main>
