@@ -61,9 +61,10 @@ export function Hero() {
             {...fadeUp(0.2)}
             className="text-lg text-[var(--color-muted)] max-w-xl leading-relaxed mb-10"
           >
-            Tech enthusiast who loves learning and building things. I explore web and mobile
-            development with a curiosity that keeps me chasing better tools, better craft, and
-            experiences worth caring about.
+            Educator and tech enthusiast who loves learning and building things. 
+            I teach by day and explore web and mobile development by curiosity, 
+            chasing better tools, better craft, and experiences worth caring about. 
+            I believe the best builders never stop being students, and the best teachers never stop building.
           </motion.p>
 
           <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3">

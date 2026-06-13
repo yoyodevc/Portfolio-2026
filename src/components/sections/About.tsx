@@ -183,24 +183,25 @@ export function About() {
         className="space-y-4 text-[var(--color-muted)] leading-relaxed mb-12 text-justify"
       >
         <p>
-          I'm an aspiring full-stack developer based in the Philippines. I've built web
-          and mobile projects while also teaching core programming subjects, hardware and software
-          fundamentals, and IoT, which keeps me grounded in how things actually work under the hood.
+          I'm an aspiring full-stack developer and college instructor based in the Zamboanga, Philippines. I've taught about
+          core subjects regarding programming, databases, and IoT, subjects that keep me grounded in how things actually work
+          under the hood. Explaining these concepts to students every day sharpens the way I think and
+          build.
         </p>
         <p>
           I'm passionate about transforming complex problems into seamless digital experiences. My
-          curiosity about computers and technology goes back further than I can remember, and it
-          still drives how I approach every project, from initial design systems to production
-          infrastructure, with attention to the details that make things genuinely pleasant to use.
+          curiosity about computers and technology goes back further than I can remember, and it still
+          drives how I approach every project, from initial design systems to production infrastructure,
+          with attention to the details that make things genuinely pleasant to use.
         </p>
         <p>
           I'm drawn to work where design and engineering overlap. I care about things like transition
-          timing, focus management, and whether a form error is actually helpful. Not because
-          perfection is the goal, but because users notice when something feels right.
+          timing, focus management, and whether a form error is actually helpful. Not because perfection
+          is the goal, but because users notice when something feels right.
         </p>
         <p>
-          Outside of work I'm usually exploring new dev tooling, reading about type design, or
-          building small tools to scratch my own itches.
+          Outside of work I'm usually exploring new dev tooling, reading about type design, or building
+          small tools to scratch my own itches.
         </p>
       </motion.div>
 

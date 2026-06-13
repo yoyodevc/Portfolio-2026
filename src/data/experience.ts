@@ -17,11 +17,12 @@ export const experience: WorkExperience[] = [
     period: "Academic Year 2025 — 2026",
     location: "Zamboanga, PH",
     description:
-      "Design and build web and mobile products end-to-end for clients across fintech, SaaS, and consumer apps. Scope includes architecture, UI engineering, API design, and deployment.",
+      "Taught core programming and technology subjects while actively contributing to student development inside and outside the classroom. Built genuine rapport with students through mentorship, org advising, and a shared passion for esports.",
     highlights: [
-      "Delivered four production apps from zero to launch across React Native and React web",
-      "Built a real-time analytics dashboard handling 50k+ events per minute via WebSockets",
-      "Established component libraries and design systems used across multiple client projects",
+      "Served as adviser for the local publication organization, guiding students in editorial and organizational work",
+      "Contributed to faculty-based system projects, bridging academic instruction with real-world development",
+      "Mentored students in hackathon competitions and supported an international student throughout their academic journey",
+      "Fostered strong student engagement as an esports coach, creating a space that made learning feel approachable and motivating",
     ],
     stack: ["OOP", "Fundamentals of Database Systems", "DSA", "ComProg 2", "IoT"],
   },
