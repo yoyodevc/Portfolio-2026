@@ -1,0 +1,1369 @@
+<!doctype html>
+<!--
+  John Fredrick N. Lim, in print.
+  A portfolio drawn entirely in code as a simulated risograph sheet: twelve
+  isometric rooms, four spot inks, one HTML file, no images, fonts or libraries.
+
+  The rooms, in order (chapter = section of the portfolio):
+    I     Hello, I'm John ............ the studio by the sea window (intro)
+    II    Engineering with Intention . the reading room (about, top skills)
+    III   Hatchify ................... the capstone lab, egg incubator and chicks (education)
+    IV    The Lecture Hall ........... teaching at ZPPSU, chalkboard of DSA, OOP and databases
+    V     The Press Room ............. advising the Cyber Claw Publication
+    VI    Game Night ................. coaching the esports team
+    VII   The Hackathon .............. mentoring students through the night
+    VIII  Freelance .................. the home office, a client call and wireframes
+    IX    PokeClash .................. the retro game room (project)
+    X     To-do List ................. the cork board and the vault door (project)
+    XI    Calculator ................. the giant calculator and its receipt tape (project)
+    XII   Let's Work Together ........ the mail room (contact)
+
+  The recurring motif, like a signature, is John's teal coffee mug with a red
+  band. It is in every room: on a desk, in chalk, on a pixel poster, on a
+  stamp, hiding among trophies.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>John Fredrick N. Lim</title>
+<meta name="description" content="Educator and developer from Zamboanga, Philippines. A portfolio printed in code.">
+<link rel="icon" href="data:,">
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#2c2a28;overscroll-behavior:none}
+#c{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}
+#card{--a:#F15060;position:fixed;left:28px;bottom:28px;width:min(390px,calc(100vw - 56px));max-height:calc(100vh - 56px);overflow:auto;box-sizing:border-box;padding:34px 32px 26px;
+  color:#3D5588;font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;background:#F4ECDB;box-shadow:0 14px 40px rgba(0,0,0,.45);
+  opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);pointer-events:none}
+#card.on{opacity:1;transform:none;pointer-events:auto}
+@media (prefers-reduced-motion:reduce){#card{transform:none;transition:opacity .5s ease}}
+#card>canvas{position:absolute;inset:0;width:100%;height:100%}
+#card .in{position:relative;mix-blend-mode:multiply}
+#card .ch{margin:0 0 8px;font-variant:small-caps;text-transform:lowercase;letter-spacing:.2em;font-size:16px;color:var(--a)}
+#card h1{margin:0 0 12px;font-weight:400;font-size:35px;line-height:1.06;letter-spacing:-.005em;color:#2b3a63}
+#card .orn{display:flex;align-items:center;gap:12px;margin:0 0 16px;color:var(--a);font-size:15px}
+#card .orn:before,#card .orn:after{content:"";flex:1;height:1px;background:currentColor}
+#card blockquote{margin:0;font-style:italic;font-size:17.5px;line-height:1.48;hanging-punctuation:first}
+#card blockquote p{margin:0}
+#card .dc{float:left;font-style:normal;font-size:3.6em;line-height:.8;padding:6px 7px 0 0;color:var(--a)}
+#card .meta{margin:16px 0 0;font-variant:small-caps;letter-spacing:.05em;font-size:15px;line-height:1.5}
+#card .links{margin:12px 0 0;font-size:16px}
+#card .links a{color:var(--a);text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:1px}
+#card .links a:focus-visible{outline:2px solid var(--a);outline-offset:3px}
+#card .links span{margin:0 10px;color:#3D5588}
+@media (max-width:700px){#card{left:12px;right:12px;bottom:12px;width:auto;padding:22px 20px 18px;max-height:41vh}#card h1{font-size:27px}#card blockquote{font-size:15.5px}#card .meta{font-size:13.5px}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="An illustrated risograph print of twelve rooms from John Fredrick Lim's work and life"></canvas>
+<aside id="card" aria-live="polite"><canvas></canvas><div class="in"></div></aside>
+<script>
+'use strict';
+/* =====================================================================
+   1. Seeded randomness and noise
+   ===================================================================== */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hash2(x,y,s){let h=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math.imul(s|0,1274126177);h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return(h>>>0)/4294967296;}
+function vnoise(x,y,s){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const a=hash2(xi,yi,s),b=hash2(xi+1,yi,s),c=hash2(xi,yi+1,s),d=hash2(xi+1,yi+1,s);return(a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v)*2-1;}
+// periodic value noise, lattice wraps every P cells (for seamless tiles)
+function pnoise(x,y,P,s){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const m=q=>((q%P)+P)%P;const a=hash2(m(xi),m(yi),s),b=hash2(m(xi+1),m(yi),s),c=hash2(m(xi),m(yi+1),s),d=hash2(m(xi+1),m(yi+1),s);
+  return(a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v)*2-1;}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t, TAU=Math.PI*2;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, smooth=t=>t*t*(3-2*t);
+
+/* =====================================================================
+   2. The press: four spot inks, their screens and the paper
+   Each ink has an integer screen vector (a,b). The dot lattice spanned by
+   (a,b) and (-b,a) repeats on the pixel grid every (a²+b²)/gcd pixels, so
+   a rotated halftone screen can be pre-rendered as a seamless tile.
+   ===================================================================== */
+const KEYS=['Y','R','T','N'];
+const INKS=[
+  {name:'Sunflower',   hex:'#FFB511', v:[4,0]},   //  0.0°
+  {name:'Bright Red',  hex:'#F15060', v:[4,1]},   // 14.0°
+  {name:'Teal',        hex:'#00838A', v:[1,4]},   // 76.0°
+  {name:'Federal Blue',hex:'#3D5588', v:[3,3]},   // 45.0°, also the key/line ink
+];
+// misregistration of each plate, in world units
+const MIS=[[1.5,-0.9],[-1.1,1.1],[0.8,1.4],[-0.25,0.2]];
+const PAPER=[244,236,219], PAPER_HEX='#F4ECDB';
+const R1=0.85;               // bake pixels per world unit at LOD 1 (a 4px screen cell is ~5 world units)
+const KMAX=3;
+function gcd(a,b){while(b){[a,b]=[b,a%b];}return a;}
+function mkCanvas(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));return c;}
+const scratch=mkCanvas(2,2).getContext('2d');
+
+function inkTiles(i,k){
+  const [a,b]=INKS[i].v,P=(a*a+b*b)/gcd(a,b),m=Math.ceil(100/P),T=P*m,TS=T*k,cell=Math.hypot(a,b);
+  const rnd=mulberry(9001+i*77),dots=[],R=Math.ceil(T*1.6/cell)+3;
+  for(let u=-R;u<=R;u++)for(let w=-R;w<=R;w++){
+    const x=u*a-w*b,y=u*b+w*a;if(x<0||y<0||x>=T||y>=T)continue;
+    dots.push([x+(rnd()-.5)*cell*.24,y+(rnd()-.5)*cell*.24,1+(rnd()-.5)*.18,rnd()]);
+  }
+  const out=[];
+  for(let L=1;L<=10;L++){
+    const cv=mkCanvas(TS,TS),c=cv.getContext('2d');c.fillStyle=INKS[i].hex;
+    if(L===10){
+      // solid: full ink with random dropout where the drum starved
+      c.fillRect(0,0,TS,TS);c.globalCompositeOperation='destination-out';
+      const r2=mulberry(333+i*5),n=Math.round(T*T/120);
+      for(let q=0;q<n;q++){const x=r2()*TS,y=r2()*TS,rr=(.35+r2()*r2()*1.7)*k;c.globalAlpha=.3+r2()*.7;
+        c.beginPath();c.ellipse(x,y,rr,rr*(.5+r2()*.6),r2()*3,0,TAU);c.fill();}
+      c.globalAlpha=.12;for(let q=0;q<3;q++){const y=r2()*TS;c.fillRect(0,y,TS,(.6+r2())*k);}
+    }else{
+      const d=L/10;c.beginPath();
+      for(const [x,y,sf,dr] of dots){
+        if(dr<.03)continue;                         // a missing dot now and then
+        let r=cell*Math.sqrt(d/Math.PI)*sf;if(d>.72)r*=1+(d-.72)*.45;
+        for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){const X=x+ox*T,Y=y+oy*T;
+          if(X+r<0||Y+r<0||X-r>T||Y-r>T)continue;c.moveTo((X+r)*k,Y*k);c.arc(X*k,Y*k,r*k,0,TAU);}
+      }
+      c.fill();
+    }
+    out.push(scratch.createPattern(cv,'repeat'));
+  }
+  return out;
+}
+function paperTile(k){
+  const T=160*k,cv=mkCanvas(T,T),c=cv.getContext('2d'),im=c.createImageData(T,T),D=im.data,sc=20*k;
+  for(let y=0;y<T;y++)for(let x=0;x<T;x++){
+    const n=(hash2(x,y,5)-.5)*10+pnoise(x/sc,y/sc,8,6)*4+pnoise(x/(4*k),y/(4*k),40,8)*2.5,o=(y*T+x)*4;
+    D[o]=PAPER[0]+n;D[o+1]=PAPER[1]+n;D[o+2]=PAPER[2]+n*1.25;D[o+3]=255;
+  }
+  c.putImageData(im,0,0);
+  const r=mulberry(77);c.lineCap='round';
+  for(let i=0;i<46;i++){const x=r()*T,y=r()*T,a=r()*TAU,l=(4+r()*16)*k;
+    c.strokeStyle=r()<.55?'rgba(120,96,60,.10)':'rgba(255,255,248,.45)';c.lineWidth=(.35+r()*.6)*k;
+    c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+Math.cos(a+.6)*l*.5,y+Math.sin(a+.6)*l*.5,x+Math.cos(a)*l,y+Math.sin(a)*l);c.stroke();}
+  return {cv,pat:scratch.createPattern(cv,'repeat')};
+}
+function mottleTile(){
+  const T=64,cv=mkCanvas(T,T),c=cv.getContext('2d'),im=c.createImageData(T,T),D=im.data;
+  for(let y=0;y<T;y++)for(let x=0;x<T;x++){const n=pnoise(x/8,y/8,8,21)*.6+pnoise(x/3,y/3,21,22)*.4,o=(y*T+x)*4;
+    D[o]=PAPER[0];D[o+1]=PAPER[1];D[o+2]=PAPER[2];D[o+3]=clamp(n*80+18,0,70);}
+  c.putImageData(im,0,0);return scratch.createPattern(cv,'repeat');
+}
+const PAT=[];let MOTTLE=null;const SPC=new Map();
+const INKRGB=INKS.map(k=>[1,3,5].map(o=>parseInt(k.hex.substr(o,2),16)/255));
+// the colour a spec prints as when seen from far away (used for tiny figures)
+function specColor(sp){const key=KEYS.map(k=>((sp[k]||0)*20|0)).join()+(sp.ko===false?'m':'');let c=SPC.get(key);if(c)return c;
+  const r=sp.ko===false?[1,1,1]:PAPER.map(v=>v/255);for(let i=0;i<4;i++){const d=Math.min(1,sp[KEYS[i]]||0);for(let j=0;j<3;j++)r[j]*=1-d*(1-INKRGB[i][j]);}
+  c='rgb('+r.map(v=>Math.round(v*255)).join()+')';SPC.set(key,c);return c;}
+function getPat(k){if(!PAT[k]){PAT[k]={ink:INKS.map((_,i)=>inkTiles(i,k)),paper:paperTile(k).pat};}return PAT[k];}
+
+/* =====================================================================
+   3. The pen. Every mark goes through here: fills are knocked out of the
+   paper and overprinted with multiply, one plate at a time, each plate
+   shifted by its misregistration. Lines are tapered filled strokes.
+   Coordinates are world units; the pen maps them to device pixels.
+   ===================================================================== */
+class Pen{
+  constructor(ctx,s,k,v,ox,oy){
+    this.c=ctx;this.s=s;this.k=k;this.v=v;this.ox=ox;this.oy=oy;this.n=0;this.P=getPat(k);
+    const f=s/(k*R1);this.pm=new DOMMatrix([f,0,0,f,ox,oy]);
+    this.seg=s>1.4?8:s>.7?13:s>.35?22:40;this.lo=s<.3;
+  }
+  // the boil: a smooth displacement field that changes with the variant
+  W(x,y){const v=this.v*2.39996;return[this.ox+(x+1.4*Math.sin(y*.043+x*.017+v)+.7*Math.sin(x*.097-y*.061+v*1.7))*this.s,this.oy+(y+1.4*Math.sin(x*.047-y*.013+v*1.3)+.7*Math.sin(y*.089+x*.057+v*2.9))*this.s];}
+  loop(path,pts,closed){
+    const n=pts.length,seg=this.seg;let first=true;
+    for(let i=0;i<(closed?n:n-1);i++){
+      const a=pts[i],b=pts[(i+1)%n],L=Math.hypot(b[0]-a[0],b[1]-a[1]),m=Math.max(1,Math.ceil(L/seg));
+      for(let j=0;j<m;j++){const t=j/m,q=this.W(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t);if(first){path.moveTo(q[0],q[1]);first=false;}else path.lineTo(q[0],q[1]);}
+    }
+    if(!closed){const q=this.W(pts[n-1][0],pts[n-1][1]);path.lineTo(q[0],q[1]);}
+    path.closePath();
+  }
+  shape(loops){const p=new Path2D();for(const l of loops)if(l.length>1)this.loop(p,l,true);return p;}
+  paper(path,rule){if(this.flat){this.c.globalCompositeOperation='source-over';this.c.fillStyle=PAPER_HEX;this.c.fill(path,rule);return;}const c=this.c,pp=this.P.paper;pp.setTransform(this.pm);c.globalCompositeOperation='source-over';c.fillStyle=pp;c.fill(path,rule);}
+  ink(path,i,d,rule){
+    if(this.flat){const c=this.c;c.globalCompositeOperation='multiply';c.globalAlpha=Math.min(1,d);c.fillStyle=INKS[i].hex;c.fill(path,rule);c.globalAlpha=1;c.globalCompositeOperation='source-over';return;}
+    const c=this.c,L=clamp(Math.round(d*10),1,10),pt=this.P.ink[i][L-1];pt.setTransform(this.pm);
+    c.globalCompositeOperation='multiply';c.fillStyle=pt;c.setTransform(1,0,0,1,MIS[i][0]*this.s,MIS[i][1]*this.s);
+    c.fill(path,rule);c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='source-over';
+  }
+  // sp = {Y,R,T,N densities 0..1, ko:knockout (default true), ol:outline width, oi:outline ink, eo:evenodd}
+  fill(pts,sp){if(!sp)return this;return this.fillL([pts],sp);}
+  fillL(loops,sp){
+    const path=this.shape(loops),rule=sp.eo?'evenodd':'nonzero';
+    if(this.flat){const c=this.c;c.globalCompositeOperation=sp.ko===false?'multiply':'source-over';c.fillStyle=specColor(sp);c.fill(path,rule);c.globalCompositeOperation='source-over';return this;}
+    if(sp.ko!==false)this.paper(path,rule);
+    for(let i=0;i<4;i++){const d=sp[KEYS[i]];if(d>.03)this.ink(path,i,d,rule);}
+    if(sp.ol&&!this.lo)for(const l of loops)this.outline(l,sp.ol,sp.oi??3);
+    return this;
+  }
+  // tapered, wobbling hand line. ink -1 draws in paper (chalk, highlights)
+  line(pts,w,ink=3,o={}){
+    if(pts.length<2)return this;
+    const id=this.n++,s=this.s,seg=this.seg*.8,J=o.j??.95,sd=id*13.37+this.v*71.3;
+    const q=[];
+    for(let i=0;i<pts.length-1;i++){const [x0,y0]=pts[i],[x1,y1]=pts[i+1],L=Math.hypot(x1-x0,y1-y0),m=Math.max(1,Math.ceil(L/seg));
+      for(let j=0;j<m;j++){const t=j/m;q.push([x0+(x1-x0)*t,y0+(y1-y0)*t]);}}
+    q.push(pts[pts.length-1]);
+    const ov=o.ov??1;
+    if(ov&&q.length>1){const n=q.length,a=q[0],b=q[1],c=q[n-1],d=q[n-2];
+      const la=Math.hypot(a[0]-b[0],a[1]-b[1])||1,lc=Math.hypot(c[0]-d[0],c[1]-d[1])||1;
+      q[0]=[a[0]+(a[0]-b[0])/la*ov,a[1]+(a[1]-b[1])/la*ov];q[n-1]=[c[0]+(c[0]-d[0])/lc*ov,c[1]+(c[1]-d[1])/lc*ov];}
+    const n=q.length,P=new Array(n);
+    for(let i=0;i<n;i++){const t=i/(n-1);P[i]=this.W(q[i][0]+J*Math.sin(t*4.3+sd)*Math.cos(t*2.1+sd*.7),q[i][1]+J*Math.sin(t*3.7+sd*1.3+2)*Math.cos(t*1.7+sd));}
+    const Lf=[],Rt=[],base=w*s*.5;
+    for(let i=0;i<n;i++){
+      const a=P[Math.max(0,i-1)],b=P[Math.min(n-1,i+1)];let dx=b[0]-a[0],dy=b[1]-a[1];const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+      const t=i/(n-1),tp=o.flat?1:.28+.72*Math.pow(Math.sin(Math.PI*t),.55);
+      const hw=Math.max(.38,base*tp*(1+.18*Math.sin(t*9+sd*2.3)));
+      Lf.push([P[i][0]-dy*hw,P[i][1]+dx*hw]);Rt.push([P[i][0]+dy*hw,P[i][1]-dx*hw]);
+    }
+    const path=new Path2D();path.moveTo(Lf[0][0],Lf[0][1]);for(let i=1;i<n;i++)path.lineTo(Lf[i][0],Lf[i][1]);
+    for(let i=n-1;i>=0;i--)path.lineTo(Rt[i][0],Rt[i][1]);path.closePath();
+    if(ink<0)this.paper(path,'nonzero');else this.ink(path,ink,o.d??1,'nonzero');
+    return this;
+  }
+  // closed outline, lifted at corners like a hand-drawn contour
+  outline(pts,w,ink=3,o={}){
+    const n=pts.length;if(n<3){this.line(pts,w,ink,o);return this;}
+    const cor=[];
+    for(let i=0;i<n;i++){const a=pts[(i-1+n)%n],b=pts[i],c=pts[(i+1)%n];
+      let d=Math.abs(Math.atan2(c[1]-b[1],c[0]-b[0])-Math.atan2(b[1]-a[1],b[0]-a[0]));if(d>Math.PI)d=TAU-d;if(d>.62)cor.push(i);}
+    if(cor.length<2){const h=n>>1;this.line(pts.slice(0,h+1),w,ink,o);this.line(pts.slice(h).concat([pts[0],pts[1]]),w,ink,o);return this;}
+    for(let j=0;j<cor.length;j++){const i0=cor[j],i1=cor[(j+1)%cor.length],sg=[pts[i0]];let i=i0;while(i!==i1){i=(i+1)%n;sg.push(pts[i]);}this.line(sg,w,ink,o);}
+    return this;
+  }
+}
+/* A recorder with the pen's drawing interface, so a scene is described once
+   and replayed per boil variant, a few operations per frame. */
+class Rec{constructor(){this.ops=[];}
+  fill(a,b){this.ops.push([0,a,b]);return this;} fillL(a,b){this.ops.push([1,a,b]);return this;}
+  line(a,b,c,d){this.ops.push([2,a,b,c,d]);return this;} outline(a,b,c,d){this.ops.push([3,a,b,c,d]);return this;}}
+function play(op,p){switch(op[0]){case 0:p.fill(op[1],op[2]);break;case 1:p.fillL(op[1],op[2]);break;case 2:p.line(op[1],op[2],op[3],op[4]||{});break;case 3:p.outline(op[1],op[2],op[3],op[4]||{});}}
+
+/* =====================================================================
+   4. Colour specs and geometry helpers
+   ===================================================================== */
+const S=(Y=0,R=0,T=0,N=0,o)=>Object.assign({Y,R,T,N,ol:1.1},o||{});
+const dk=(sp,a)=>Object.assign({},sp,{N:Math.min(1,(sp.N||0)+a)});
+const noOl=sp=>Object.assign({},sp,{ol:0});
+const TONE={
+  wood:S(.45,.22,0,.1), woodD:S(.5,.32,0,.32), woodL:S(.3,.1,0,0),
+  cream:S(.06,.02), white:S(0,0,0,0), navy:S(0,0,0,.9), ink:S(0,.15,0,1),
+  teal:S(0,0,.75), tealL:S(0,0,.3), red:S(0,.8), redL:S(0,.3), yel:S(.85), yelL:S(.35),
+  green:S(.55,0,.6,.05), greenD:S(.45,0,.7,.3), metal:S(0,0,.12,.35), metalL:S(0,0,.08,.15),
+  glass:S(.04,0,.16,.02), sky:S(.1,.04,.14,0), screen:S(0,0,.35,.55), orange:S(.8,.4), brown:S(.45,.4,0,.45), purple:S(0,.45,0,.45),
+};
+const ellipse=(cx,cy,rx,ry,n=18,rot=0)=>{const o=[],c=Math.cos(rot),s=Math.sin(rot);for(let i=0;i<n;i++){const a=i/n*TAU,x=Math.cos(a)*rx,y=Math.sin(a)*ry;o.push([cx+x*c-y*s,cy+x*s+y*c]);}return o;};
+const rect=(x,y,w,h)=>[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
+// catmull-rom smoothing
+function smoothPts(pts,closed=true,seg=3){const n=pts.length,o=[];
+  for(let i=0;i<(closed?n:n-1);i++){const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+    for(let j=0;j<seg;j++){const t=j/seg,t2=t*t,t3=t2*t;
+      o.push([.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+              .5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)]);}}
+  if(!closed)o.push(pts[n-1]);return o;}
+/* =====================================================================
+   5. Isometric kit. Each scene is a cut-away slab of floor 10 x 10 units
+   with two back walls (x=0 on the left, y=0 on the right). The viewer
+   stands at the (10,10) corner, so larger x+y means nearer.
+   ===================================================================== */
+const U=50,CW=1000,CH=920,OX=500,OY=372,WH=6.4,C30=.8660254;
+const iso=(x,y,z=0)=>[OX+(x-y)*U*C30,OY+(x+y)*U*.5-z*U];
+const WL=(u,v)=>iso(.02,u,v), WR=(u,v)=>iso(u,.02,v);
+const wq=(W,u,v,w,h)=>[W(u,v),W(u+w,v),W(u+w,v+h),W(u,v+h)];
+const fq=(x,y,w,d,z=0)=>[iso(x,y,z),iso(x+w,y,z),iso(x+w,y+d,z),iso(x,y+d,z)];
+const isoEl=(x,y,z,r,n=22,r2)=>{const o=[];for(let i=0;i<n;i++){const a=i/n*TAU;o.push(iso(x+Math.cos(a)*r,y+Math.sin(a)*(r2??r),z));}return o;};
+// a 2D painting surface on a wall: s,t in 0..1 from its top-left corner
+const surf=(W,u,v,w,h)=>(s,t)=>W(u+s*w,v+h-t*h);
+const mapPts=(M,pts)=>pts.map(([s,t])=>M(s,t));
+
+function box(p,x,y,z,w,d,h,sp,o={}){
+  const A=iso(x,y,z+h),B=iso(x+w,y,z+h),C=iso(x+w,y+d,z+h),D=iso(x,y+d,z+h),E=iso(x+w,y,z),F=iso(x+w,y+d,z),G=iso(x,y+d,z);
+  const lw=o.lw??1.2;
+  if(h>0){p.fill([D,C,F,G],noOl(o.left||dk(sp,.14)));p.fill([B,C,F,E],noOl(o.right||dk(sp,.3)));}
+  if(!o.noTop)p.fill([A,B,C,D],noOl(o.top||sp));
+  if(lw){const L=(a,b)=>p.line([a,b],lw);if(!o.noTop){L(A,B);L(D,A);}L(B,C);L(C,D);if(h>0){L(B,E);L(C,F);L(D,G);L(E,F);L(F,G);}}
+  return{A,B,C,D,E,F,G};
+}
+function cyl(p,x,y,z,r,h,sp,o={}){
+  const n=o.n||20,a0=-Math.PI/4,pts=[];
+  for(let i=0;i<=n/2;i++){const a=a0+i/(n/2)*Math.PI;pts.push(iso(x+r*Math.cos(a),y+r*Math.sin(a),z));}
+  for(let i=n/2;i>=0;i--){const a=a0+i/(n/2)*Math.PI;pts.push(iso(x+r*Math.cos(a),y+r*Math.sin(a),z+h));}
+  p.fill(pts,o.side||dk(sp,.18));
+  if(!o.noTop)p.fill(isoEl(x,y,z+h,r,n),o.top||sp);
+}
+function band(p,x,y,z,r,h,sp){ // a painted stripe round the front of a cylinder
+  const n=12,a0=-Math.PI/4,pts=[];
+  for(let i=0;i<=n;i++){const a=a0+i/n*Math.PI;pts.push(iso(x+r*Math.cos(a),y+r*Math.sin(a),z));}
+  for(let i=n;i>=0;i--){const a=a0+i/n*Math.PI;pts.push(iso(x+r*Math.cos(a),y+r*Math.sin(a),z+h));}
+  p.fill(pts,Object.assign({},sp,{ko:true}));
+}
+// stepped halftone light: concentric rings of rising density, never a gradient
+function rings(p,loopFn,steps,ink,dmax,dmin=0){
+  for(let i=0;i<steps;i++){
+    const f0=1-i/steps,f1=1-(i+1)/steps,d=dmin+(dmax-dmin)*(i+1)/steps,sp={ko:false,eo:true,ol:0};sp[KEYS[ink]]=d;
+    p.fillL(i<steps-1?[loopFn(f0),loopFn(f1)]:[loopFn(f0)],sp);
+  }
+}
+const floorRings=(p,x,y,z,r,steps,ink,dmax,rr)=>rings(p,f=>isoEl(x,y,z,r*f,24,(rr??r)*f),steps,ink,dmax);
+const flatRings=(p,cx,cy,rx,ry,steps,ink,dmax)=>rings(p,f=>ellipse(cx,cy,rx*f,ry*f,24),steps,ink,dmax);
+
+/* ---------- the room shell ---------- */
+function shell(p,o){
+  // printed panel behind the diorama, so the scenes pack into one block
+  p.fill(rect(0,0,CW,CH),Object.assign({ol:0},o.panel));
+  // halftone field ornaments on the panel
+  if(o.panelDots){const r=mulberry(o.seed||1);for(let i=0;i<7;i++){const x=r()*CW,y=r()*CH*.4;flatRings(p,x,y,30+r()*40,30+r()*40,3,o.panelDots,.25);}}
+  // slab
+  const t=.45;
+  p.fill([iso(0,10,0),iso(10,10,0),iso(10,10,-t),iso(0,10,-t)],S(0,0,0,.15,{ol:1.2}));
+  p.fill([iso(10,0,0),iso(10,10,0),iso(10,10,-t),iso(10,0,-t)],S(0,0,0,.4,{ol:1.2}));
+  // walls
+  const wl=[iso(0,0,0),iso(0,10,0),iso(0,10,WH),iso(0,0,WH)],wr=[iso(0,0,0),iso(10,0,0),iso(10,0,WH),iso(0,0,WH)];
+  p.fill(wl,noOl(o.wallL));p.fill(wr,noOl(o.wallR));
+  if(o.wallpaper)o.wallpaper(p);
+  // floor
+  p.fill(fq(0,0,10,10),noOl(o.floor));
+  if(o.planks){for(let i=1;i<14;i++){const y=i*10/14;p.line([iso(0,y,0),iso(10,y,0)],.8,3,{d:.6});}
+    const r=mulberry(o.seed||3);for(let i=0;i<14;i++){const y0=i*10/14,y1=(i+1)*10/14;for(let j=0;j<2;j++){const x=r()*9.5+.2;p.line([iso(x,y0,0),iso(x,y1,0)],.7,3,{d:.5});}}}
+  if(o.tiles){for(let i=1;i<10;i++){p.line([iso(i,0,0),iso(i,10,0)],.7,3,{d:.5});p.line([iso(0,i,0),iso(10,i,0)],.7,3,{d:.5});}
+    for(let i=0;i<10;i++)for(let j=0;j<10;j++)if((i+j)%2)p.fill(fq(i,j,1,1),Object.assign({ol:0,ko:false},o.tiles));}
+  // baseboards
+  box(p,0,0,0,.08,10,.25,o.trim||TONE.cream,{lw:.8});box(p,0,0,0,10,.08,.25,o.trim||TONE.cream,{lw:.8});
+  // wall cut edges (dollhouse thickness)
+  const th=.28,cap=o.cap||S(.1,.05,0,.08);
+  p.fill([iso(-th,-th,WH),iso(-th,10,WH),iso(0,10,WH),iso(0,0,WH)],cap);
+  p.fill([iso(-th,-th,WH),iso(10,-th,WH),iso(10,0,WH),iso(0,0,WH)],cap);
+  p.fill([iso(-th,10,0),iso(0,10,0),iso(0,10,WH),iso(-th,10,WH)],dk(cap,.2));
+  p.fill([iso(10,-th,0),iso(10,0,0),iso(10,0,WH),iso(10,-th,WH)],dk(cap,.3));
+  p.fill([iso(-th,10,-t),iso(0,10,-t),iso(0,10,0),iso(-th,10,0)],dk(cap,.25));
+  p.fill([iso(10,-th,-t),iso(10,0,-t),iso(10,0,0),iso(10,-th,0)],dk(cap,.35));
+  // corner seam + floor edges
+  p.line([iso(0,0,0),iso(0,0,WH)],1.2);p.line([iso(0,10,0),iso(10,10,0)],1.5);p.line([iso(10,0,0),iso(10,10,0)],1.5);
+  p.line([iso(0,0,0),iso(0,10,0)],1.1);p.line([iso(0,0,0),iso(10,0,0)],1.1);
+}
+
+/* ---------- furniture ---------- */
+function desk(p,x,y,w,d,h=1.5,sp=TONE.wood,o={}){
+  const t=.12,l=.13,leg=o.leg||dk(sp,.15);
+  if(o.drawers){box(p,x,y,0,w*.35,d,h-t,sp);}else{box(p,x,y,0,l,l,h-t,leg);box(p,x+w-l,y,0,l,l,h-t,leg);box(p,x,y+d-l,0,l,l,h-t,leg);}
+  box(p,x+w-l,y+d-l,0,l,l,h-t,leg);
+  box(p,x,y,h-t,w,d,t,sp);
+  return h;
+}
+function stool(p,x,y,h=.9,sp=TONE.woodD){cyl(p,x,y,0,.07,h-.08,sp);cyl(p,x,y,h-.08,.28,.08,sp);}
+function chair(p,x,y,dir='+x',sp=TONE.teal){
+  const s=.8,h=.9;
+  const legs=()=>{box(p,x,y,0,.08,.08,h-.08,dk(sp,.2),{lw:.6});box(p,x+s-.08,y,0,.08,.08,h-.08,dk(sp,.2),{lw:.6});box(p,x,y+s-.08,0,.08,.08,h-.08,dk(sp,.2),{lw:.6});box(p,x+s-.08,y+s-.08,0,.08,.08,h-.08,dk(sp,.2),{lw:.6});};
+  const back=()=>{if(dir==='+x')box(p,x,y,h,.1,s,.9,sp);else if(dir==='+y')box(p,x,y,h,s,.1,.9,sp);else if(dir==='-x')box(p,x+s-.1,y,h,.1,s,.9,sp);else box(p,x,y+s-.1,h,s,.1,.9,sp);};
+  if(dir==='+x'||dir==='+y')back();
+  legs();box(p,x,y,h-.08,s,s,.1,sp);
+  if(dir==='-x'||dir==='-y')back();
+}
+function wallShelf(p,side,u,z,w,rng,sp=TONE.wood,books=true){
+  const W=side==='L';
+  if(W)box(p,0,u,z,.55,w,.08,sp);else box(p,u,0,z,w,.55,.08,sp);
+  if(!books)return;
+  let o=.08;const cols=[TONE.red,TONE.teal,TONE.yel,S(0,0,0,.7),S(.5,.5),S(0,.4,.5),TONE.cream,S(.6,0,.5)];
+  while(o<w-.2){const bw=.1+rng()*.14,bh=.45+rng()*.35,c=cols[Math.floor(rng()*cols.length)];
+    if(rng()<.12){o+=.15;continue;}
+    if(W)box(p,.06,u+o,z+.08,.42,bw,bh,c,{lw:.7});else box(p,u+o,.06,z+.08,bw,.42,bh,c,{lw:.7});o+=bw+.01;}
+}
+function bookcase(p,side,u,w,h,rng,sp=TONE.woodD){
+  const d=.6;
+  if(side==='L'){box(p,0,u,0,d,w,h,sp);}else box(p,u,0,0,w,d,h,sp);
+  // shelves on the front face
+  const F=side==='L'?(a,b)=>iso(d,u+a,b):(a,b)=>iso(u+a,d,b);
+  const rows=Math.floor(h/.95);const cols=[TONE.red,TONE.teal,TONE.yel,S(0,0,0,.75),S(.5,.5),TONE.cream,S(0,.45,.5),S(.6,0,.5)];
+  for(let r=0;r<rows;r++){const z0=.15+r*.95;
+    p.fill([F(.06,z0),F(w-.06,z0),F(w-.06,z0+.8),F(.06,z0+.8)],S(.2,.2,0,.75,{ol:0}));
+    let o=.1;while(o<w-.2){const bw=.07+rng()*.1,bh=.5+rng()*.28,c=cols[Math.floor(rng()*cols.length)];
+      if(rng()<.1){o+=.18;continue;}
+      const lean=rng()<.08?.08:0;
+      p.fill([F(o,z0),F(o+bw,z0),F(o+bw+lean,z0+bh),F(o+lean,z0+bh)],Object.assign({},c,{ol:.7}));
+      if(bw>.12)p.line([F(o+bw*.5,z0+bh*.2),F(o+bw*.5,z0+bh*.8)],.6,-1);
+      o+=bw+.012;}
+  }
+}
+function windowW(p,side,u,v,w,h,view='sea'){
+  const W=side==='L'?WL:WR,M=surf(W,u,v,w,h);
+  p.fill(wq(W,u-.12,v-.12,w+.24,h+.24),S(.08,.04,0,.05));
+  p.fill(wq(W,u,v,w,h),Object.assign({},TONE.sky,{ol:0}));
+  VIEWS[view](p,M);
+  // mullions
+  p.fill(mapPts(M,[[.48,0],[.52,0],[.52,1],[.48,1]]),S(.08,.04,0,.05,{ol:.8}));
+  p.fill(mapPts(M,[[0,.46],[1,.46],[1,.5],[0,.5]]),S(.08,.04,0,.05,{ol:.8}));
+  p.outline(wq(W,u,v,w,h),1.3);
+  // sill
+  if(side==='L')box(p,0,u-.18,v-.14,.4,w+.36,.12,TONE.cream);else box(p,u-.18,0,v-.14,w+.36,.4,.12,TONE.cream);
+}
+const VIEWS={
+  sea(p,M){
+    rings(p,f=>mapPts(M,ellipse(.72,.3,.16*f,.2*f,20)),4,0,.8);
+    p.fill(mapPts(M,[[0,.62],[1,.58],[1,1],[0,1]]),S(0,0,.55,.1,{ol:.8}));
+    for(let i=0;i<4;i++)p.line(mapPts(M,[[.1+i*.2,.72+i*.06],[.22+i*.2,.71+i*.06]]),.8,-1);
+    // vinta sails, striped, from the Zamboanga shore
+    const sail=(x,y,s)=>{p.fill(mapPts(M,[[x,y],[x+.16*s,y],[x+.1*s,y+.04*s]]),S(.1,.4,0,.5,{ol:.6}));
+      const cs=[S(.85),S(0,.85),S(0,0,.8),S(.85,.6)];for(let i=0;i<4;i++)p.fill(mapPts(M,[[x+.02*s+i*.02*s,y-.02*s-i*.07*s],[x+.14*s-i*.012*s,y-.02*s-i*.06*s],[x+.13*s-i*.012*s,y-.08*s-i*.06*s],[x+.03*s+i*.02*s,y-.09*s-i*.07*s]]),Object.assign({},cs[i],{ol:.6}));};
+    sail(.12,.66,1);sail(.55,.68,.7);
+  },
+  city(p,M){
+    rings(p,f=>mapPts(M,ellipse(.3,.35,.16*f,.2*f,20)),4,1,.5);
+    const r=mulberry(12);let x=0;while(x<1){const w=.08+r()*.12,h=.25+r()*.4;p.fill(mapPts(M,[[x,1],[x,1-h],[x+w,1-h],[x+w,1]]),S(0,0,.25+r()*.2,.25,{ol:.6}));
+      for(let i=0;i<3;i++)p.fill(mapPts(M,rect(x+w*.25,1-h+.06+i*.09,w*.2,.04)),S(.8,0,0,0,{ol:0}));x+=w+.01;}
+  },
+  night(p,M){
+    p.fill(mapPts(M,rect(0,0,1,1)),S(0,0,.2,.8,{ol:0}));
+    rings(p,f=>mapPts(M,ellipse(.3,.3,.13*f,.16*f,20)),4,0,.7);
+    p.fill(mapPts(M,ellipse(.3,.3,.07,.085,16)),S(.2,0,0,0,{ol:0}));
+    const r=mulberry(4);for(let i=0;i<14;i++){const x=r(),y=r()*.6;p.fill(mapPts(M,ellipse(x,y,.008,.01,6)),S(.4,0,0,0,{ol:0}));}
+    p.fill(mapPts(M,[[0,.75],[.3,.7],[.6,.78],[1,.72],[1,1],[0,1]]),S(0,0,.3,.9,{ol:.6}));
+  },
+  sunset(p,M){
+    p.fill(mapPts(M,rect(0,0,1,1)),S(.35,.25,0,0,{ol:0}));
+    rings(p,f=>mapPts(M,ellipse(.5,.72,.35*f,.4*f,24)),5,1,.8);
+    p.fill(mapPts(M,[[0,.72],[1,.72],[1,1],[0,1]]),S(0,.2,.5,.3,{ol:.6}));
+    for(let i=0;i<5;i++)p.line(mapPts(M,[[.3+i*.03,.78+i*.04],[.7-i*.03,.78+i*.04]]),.7,0);
+  },
+};
+function frame(p,side,u,v,w,h,art,sp=TONE.woodD){
+  const W=side==='L'?WL:WR,M=surf(W,u+.08,v+.08,w-.16,h-.16);
+  p.fill(wq(W,u,v,w,h),Object.assign({},sp,{ol:1}));
+  p.fill(wq(W,u+.08,v+.08,w-.16,h-.16),S(.03,.01,0,0,{ol:.7}));
+  if(art)art(p,M);
+}
+function clock(p,side,u,v,r,t=0){
+  const W=side==='L'?WL:WR,pt=(a,rr)=>W(u+Math.cos(a)*rr,v+Math.sin(a)*rr);
+  const c=[];for(let i=0;i<20;i++)c.push(pt(i/20*TAU,r));
+  p.fill(c,S(.05,0,0,0,{ol:1.3}));
+  for(let i=0;i<12;i++)p.line([pt(i/12*TAU,r*.8),pt(i/12*TAU,r*.9)],.7);
+  p.line([pt(0,0),pt(1.2+t,r*.5)],1.6);p.line([pt(0,0),pt(-.4+t*3,r*.75)],1.1);
+}
+function rug(p,x,y,w,d,sp,st){
+  p.fill(fq(x,y,w,d,.01),Object.assign({},sp,{ol:1}));
+  if(st)for(let i=1;i<6;i++){const q=i/6;p.fill(fq(x+.1,y+d*q-.06,w-.2,.12,.01),Object.assign({},st,{ol:0,ko:false}));}
+}
+function plant(p,x,y,z=0,s=1){
+  cyl(p,x,y,z,.28*s,.5*s,S(.5,.5,0,.12,{ol:1}));band(p,x,y,z+.36*s,.285*s,.08*s,S(.3,.2,0,.3,{ol:0}));
+  const c=iso(x,y,z+.5*s),r=mulberry(Math.round(x*97+y*13));
+  for(let i=0;i<9;i++){const a=-Math.PI/2+(r()-.5)*2.6,l=(30+r()*30)*s,cx=c[0]+Math.cos(a)*l*.55,cy=c[1]+Math.sin(a)*l*.55-8*s;
+    p.fill(ellipse(cx,cy,l*.5,l*.17,14,a),i%3?TONE.green:TONE.greenD);p.line([c,[cx+Math.cos(a)*l*.35,cy+Math.sin(a)*l*.35]],.6);}
+}
+function deskLamp(p,x,y,z,glow=true){
+  if(glow)floorRings(p,x+.5,y+.35,z,.9,4,0,.6,.7);
+  cyl(p,x,y,z,.16,.05,TONE.navy);
+  const b=iso(x,y,z+.05),e=iso(x+.1,y,z+.8),h=iso(x+.45,y+.2,z+.85);
+  p.line([b,e],2.2);p.line([e,h],2.2);
+  p.fill([[h[0]-6,h[1]-8],[h[0]+10,h[1]-6],[h[0]+18,h[1]+12],[h[0]-4,h[1]+16]],S(0,.85,0,0,{ol:1}));
+}
+function floorLamp(p,x,y){
+  floorRings(p,x,y,0,1.8,5,0,.55,1.5);
+  cyl(p,x,y,0,.25,.05,TONE.navy);const b=iso(x,y,.05),t=iso(x,y,3.2);p.line([b,t],2.4);
+  const c=iso(x,y,3.2);p.fill([[c[0]-22,c[1]-24],[c[0]+22,c[1]-24],[c[0]+32,c[1]+8],[c[0]-32,c[1]+8]],S(.8,.2,0,0,{ol:1.1}));
+  rings(p,f=>ellipse(c[0],c[1]+30,60*f,40*f,20),3,0,.35);
+}
+function monitor(p,x,y,z,w=1.2,h=.75,dir='+x',content){
+  // screen on a plane facing dir; content(p,M) draws the picture
+  if(dir==='+x'){box(p,x-.1,y+w/2-.15,z,.3,.3,.04,TONE.navy);box(p,x,y+w/2-.04,z,.06,.08,.35,TONE.navy);box(p,x,y,z+.3,.08,w,h,S(0,0,0,.85));
+    const M=(s,t)=>iso(x+.081,y+.06+s*(w-.12),z+.3+h-.06-t*(h-.12));p.fill(mapPts(M,rect(0,0,1,1)),TONE.screen);if(content)content(p,M);}
+  else{box(p,x+w/2-.15,y-.1,z,.3,.3,.04,TONE.navy);box(p,x+w/2-.04,y,z,.08,.06,.35,TONE.navy);box(p,x,y,z+.3,w,.08,h,S(0,0,0,.85));
+    const M=(s,t)=>iso(x+.06+s*(w-.12),y+.081,z+.3+h-.06-t*(h-.12));p.fill(mapPts(M,rect(0,0,1,1)),TONE.screen);if(content)content(p,M);}
+}
+function laptop(p,x,y,z,dir='+x',content){
+  if(dir==='+x'){box(p,x,y,z,.55,.8,.04,TONE.metalL);box(p,x-.02,y,z+.04,.04,.8,.52,TONE.metal);
+    const M=(s,t)=>iso(x+.021,y+.05+s*.7,z+.52-t*.42);p.fill(mapPts(M,rect(0,0,1,1)),TONE.screen);if(content)content(p,M);}
+  else{box(p,x,y,z,.8,.55,.04,TONE.metalL);box(p,x,y-.02,z+.04,.8,.04,.52,TONE.metal);
+    const M=(s,t)=>iso(x+.05+s*.7,y+.021,z+.52-t*.42);p.fill(mapPts(M,rect(0,0,1,1)),TONE.screen);if(content)content(p,M);}
+}
+// generic screen content: code lines as coloured bars (no text anywhere)
+const codeLines=seed=>(p,M)=>{const r=mulberry(seed);for(let i=0;i<7;i++){const x=.08+(r()<.4?.08:0),w=.2+r()*.5;p.fill(mapPts(M,rect(x,.1+i*.115,w,.05)),S([.8,0,0][i%3],[0,.3,0][i%3],[0,0,.1][i%3],0,{ol:0,ko:false}));}};
+function mugMotif(p,x,y,z,s=1,steam=true){
+  // the recurring motif: John's teal coffee mug with a red band
+  const r=.15*s,h=.3*s,hc=iso(x+r*.72,y-r*.72,z+h*.5);
+  p.fillL([ellipse(hc[0]+2*s,hc[1],6*s,7*s,14),ellipse(hc[0]+2*s,hc[1],3*s,4*s,12)],S(0,0,.8,.1,{ol:.8,eo:true}));
+  cyl(p,x,y,z,r,h,S(0,0,.8,0,{ol:1}),{side:S(0,0,.85,.1,{ol:1})});
+  band(p,x,y,z+h*.42,r*1.01,h*.2,S(0,.9,0,0,{ol:0}));
+  p.fill(isoEl(x,y,z+h-.02,r*.8,14),S(.45,.4,0,.6,{ol:0}));
+  if(steam){const t=iso(x,y,z+h);for(let i=0;i<2;i++){const ox=(i-.5)*6*s;p.line([[t[0]+ox,t[1]-4*s],[t[0]+ox+4*s,t[1]-10*s],[t[0]+ox-2*s,t[1]-17*s],[t[0]+ox+3*s,t[1]-24*s]],.9,3,{d:.5});}}
+}
+function mug2D(p,M,cx,cy,s,sp=S(0,0,.8)){ // flat mug for posters, screens, carvings
+  const P=(x,y)=>M(cx+x*s,cy+y*s);
+  p.fillL([[P(.35,-.1),P(.62,-.12),P(.62,.28),P(.35,.25)].map(q=>q),[P(.42,-.02),P(.55,-.03),P(.55,.18),P(.42,.16)]],Object.assign({},sp,{eo:true,ol:.6}));
+  p.fill([P(-.4,-.4),P(.4,-.4),P(.36,.45),P(-.36,.45)],Object.assign({},sp,{ol:.8}));
+  p.fill([P(-.39,-.08),P(.39,-.08),P(.38,.08),P(-.38,.08)],S(0,.9,0,0,{ol:0}));
+  p.line([P(-.12,-.55),P(-.02,-.75),P(-.12,-.95)],.8,3,{d:.6});p.line([P(.14,-.55),P(.24,-.75),P(.14,-.95)],.8,3,{d:.6});
+}
+/* =====================================================================
+   6. People. One shared skeleton (about 7.5 heads tall), keyframed pose
+   clips, and body volumes that follow the joints: tapered capsules for
+   limbs, a spine-driven torso, a three-quarter head. Clothes are drawn
+   over the volumes in the same four inks.
+   Units: 150 = full height; y points down; ground at y=0; facing +x.
+   ===================================================================== */
+const POSE0={sp:0,ch:0,nk:0,thN:.03,knN:.02,ftN:0,thF:-.05,knF:.02,ftF:0,shN:.06,elN:.15,wrN:0,shF:-.06,elF:.18,wrF:0,hip:0};
+const sn=Math.sin,cs=Math.cos;
+const dl=(a,l)=>[sn(a)*l,cs(a)*l], upv=(a,l)=>[sn(a)*l,-cs(a)*l], add=(a,b)=>[a[0]+b[0],a[1]+b[1]];
+const at=(b,a,u,n)=>[b[0]+sn(a)*u+cs(a)*n,b[1]-cs(a)*u+sn(a)*n];
+function fk(q){
+  const leg=(th,kn,ft,ox)=>{const hip=[ox,0],knee=add(hip,dl(th,37)),sh=th-kn,ank=add(knee,dl(sh,36)),fa=Math.PI/2+(sh<0?.7*sh:.3*sh)+ft,toe=add(ank,dl(fa,15));return{hip,knee,ank,toe,sh,fa};};
+  const N=leg(q.thN,q.knN,q.ftN,-1),F=leg(q.thF,q.knF,q.ftF,2.5);
+  const hy=q.hip>0?q.hip:Math.max(N.ank[1]+5,N.toe[1]+2,F.ank[1]+5,F.toe[1]+2);
+  const P=[0,-hy];for(const L of [N,F])for(const k of ['hip','knee','ank','toe'])L[k]=add(L[k],P);
+  const a1=q.sp,a2=q.sp+q.ch,a3=a2+q.nk,C1=add(P,upv(a1,22)),Sh=add(C1,upv(a2,23)),Nk=add(Sh,upv(a2+q.nk*.5,7)),Hc=add(Nk,upv(a3,11.2));
+  const arm=(s,e,w,off)=>{const sj=add(add(Sh,upv(a2,-4.5)),off),el=add(sj,dl(s,28)),wr=add(el,dl(s+e,25)),hd=add(wr,dl(s+e+w,10));return{sj,el,wr,hd,a:s+e+w};};
+  return{P,C1,Sh,Nk,Hc,a1,a2,a3,N,F,aN:arm(q.shN,q.elN,q.wrN,[-1,0]),aF:arm(q.shF,q.elF,q.wrF,[2.6,-1])};
+}
+function capsule(a,b,wa,wb,bul=0){
+  const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,nx=-uy,ny=ux,ra=wa/2,rb=wb/2,o=[];
+  const m=.38,rm=ra+(rb-ra)*m+bul/2,mx=a[0]+dx*m,my=a[1]+dy*m;
+  o.push([a[0]+nx*ra,a[1]+ny*ra]);if(bul)o.push([mx+nx*rm,my+ny*rm]);o.push([b[0]+nx*rb,b[1]+ny*rb]);
+  for(let i=1;i<5;i++){const t=i/5*Math.PI;o.push([b[0]+(nx*cs(t)+ux*sn(t))*rb,b[1]+(ny*cs(t)+uy*sn(t))*rb]);}
+  o.push([b[0]-nx*rb,b[1]-ny*rb]);if(bul)o.push([mx-nx*rm,my-ny*rm]);o.push([a[0]-nx*ra,a[1]-ny*ra]);
+  for(let i=1;i<5;i++){const t=i/5*Math.PI;o.push([a[0]+(-nx*cs(t)-ux*sn(t))*ra,a[1]+(-ny*cs(t)-uy*sn(t))*ra]);}
+  return o;
+}
+// head templates, local frame centred on the skull, facing +x, three-quarter view
+const HEAD=[[-8.8,-1],[-8,-6.8],[-4,-10.6],[2,-11],[6.6,-8.4],[8.6,-4.2],[8.8,-1],[9.7,2.4],[8.6,3.6],[8.4,5.8],[7,8.6],[4,10.6],[.5,10.2],[-3.5,7.6],[-6.8,4.6]];
+const HAIR={
+  fringe:[[-9.4,3.6],[-9.8,-3],[-7.8,-9.6],[-2.5,-12.8],[3.5,-12.6],[8,-9.6],[9.6,-5.6],[8.6,-3.9],[7.4,-5.5],[6.2,-3.6],[4.8,-5.3],[3.3,-3.4],[1.8,-5.1],[.3,-3.5],[-1.2,-4.9],[-2,-2.4],[-3.4,-1.6],[-5.2,-2.4],[-6.4,1.4],[-7.8,4.4]],
+  short:[[-9.2,3],[-9.6,-3],[-7.6,-9.4],[-2.5,-12.2],[3.5,-12],[7.8,-9.2],[9.2,-5.6],[6.8,-7],[3,-7.6],[.2,-6.4],[-1.8,-3.2],[-3.4,-1.8],[-5,-2.4],[-6.4,1.4],[-7.8,3.6]],
+  long:[[-9.4,2],[-9.4,-5],[-6,-10.8],[1,-12.4],[6.8,-10],[9.4,-5.4],[7.6,-6.4],[4.8,-8.4],[2,-7],[-.6,-4.2],[-2.2,-1],[-4.4,2.6]],
+  longBack:[[-9.8,-3],[-11,6],[-10.6,16],[-6,20.5],[-1,19],[-1.2,10],[-4,4]],
+  bun:[[-9.2,2.6],[-9.4,-4],[-6.6,-10],[0,-12.2],[6,-10.4],[9.2,-5.6],[7,-7.2],[3.5,-8],[.6,-6.2],[-1.6,-2.8],[-3.4,-1.6],[-5,-1.8],[-6.6,1.6]],
+  cap:[[-9.4,-.5],[-9,-7],[-5,-11.6],[1.5,-12.8],[6.8,-10.4],[9.2,-6.4],[16,-5.2],[16.4,-3.4],[9,-3.8],[4,-4.4],[-2,-3.6],[-5,-2],[-7,1]],
+  curly:null,
+};
+const CLIPS={
+  stand:{T:4,keys:[[0,{}],[.5,{ch:.02,shN:.09,elN:.2,shF:-.03}]]},
+  walk:{T:1,keys:[[0,{thN:.4,knN:.06,thF:-.34,knF:.3,shN:-.32,elN:.3,shF:.34,elF:.35,sp:.05}],
+    [.25,{thN:.02,knN:.04,thF:.25,knF:1,shN:0,elN:.25,shF:0,elF:.3,sp:.05}],
+    [.5,{thN:-.34,knN:.3,thF:.4,knF:.06,shN:.34,elN:.35,shF:-.32,elF:.3,sp:.05}],
+    [.75,{thN:.25,knN:1,thF:.02,knF:.04,shN:0,elN:.3,shF:0,elF:.25,sp:.05}]]},
+  talk:{T:2.4,keys:[[0,{shN:.5,elN:1.2,shF:.1,elF:.4}],[.3,{shN:.8,elN:1.5,nk:-.06}],[.6,{shN:.4,elN:1,shF:.3,elF:.9}],[.85,{shN:.62,elN:1.3}]]},
+  point:{T:3,keys:[[0,{shN:1.55,elN:.12,sp:.05}],[.5,{shN:1.72,elN:.05,sp:.07}]]},
+  board:{T:2.2,keys:[[0,{shN:2.1,elN:.7,nk:-.12}],[.35,{shN:2.35,elN:.4,nk:-.15}],[.7,{shN:1.95,elN:.9,nk:-.1}]]},
+  wave:{T:1.2,keys:[[0,{shN:2.6,elN:.5,wrN:-.3}],[.5,{shN:2.45,elN:.9,wrN:.3}]]},
+  cheer:{T:1,keys:[[0,{shN:2.8,elN:.3,shF:2.7,elF:.3}],[.5,{shN:3,elN:.1,shF:2.95,elF:.15,nk:-.15}]]},
+  press:{T:1.4,keys:[[0,{shN:1.3,elN:.35,sp:.1}],[.5,{shN:1.5,elN:.08,sp:.12}]]},
+  hold:{T:4,keys:[[0,{shN:.55,elN:1.5,shF:.5,elF:1.45,nk:.3}],[.5,{shN:.6,elN:1.45,nk:.34}]]},
+  feed:{T:1.8,keys:[[0,{shN:1,elN:.5,shF:.9,elF:.55,sp:.2,nk:.2}],[.5,{shN:1.25,elN:.25,shF:1.1,elF:.3,sp:.28,nk:.25}]]},
+  think:{T:4,keys:[[0,{shN:.5,elN:2.3,wrN:.3,nk:.08,shF:.4,elF:1.4}],[.5,{shN:.52,elN:2.35,nk:.12}]]},
+  // seated clips; hip height comes from the seat
+  sit:{T:4,seated:1,keys:[[0,{}],[.5,{ch:.02}]]},
+  type:{T:.5,seated:1,keys:[[0,{shN:.62,elN:.85,shF:.58,elF:.9,sp:.08,nk:.12}],[.5,{shN:.62,elN:.78,shF:.58,elF:.97,sp:.08,nk:.12}]]},
+  read:{T:5,seated:1,keys:[[0,{shN:.4,elN:1.6,shF:.35,elF:1.65,nk:.4,sp:.08}],[.5,{shN:.42,elN:1.58,nk:.34,sp:.08}]]},
+  drink:{T:4.5,seated:1,keys:[[0,{shN:.4,elN:1}],[.3,{shN:.45,elN:2.25,nk:-.12}],[.55,{shN:.45,elN:2.25,nk:-.12}],[.8,{shN:.4,elN:1}]]},
+  game:{T:.8,seated:1,keys:[[0,{shN:.55,elN:1.1,shF:.5,elF:1.15,sp:.12,nk:.1}],[.5,{shN:.58,elN:1.2,shF:.5,elF:1.2,sp:.16,nk:.12}]]},
+  raise:{T:1.6,seated:1,keys:[[0,{shN:2.9,elN:.25,shF:.5,elF:.9}],[.5,{shN:2.75,elN:.45,shF:.5,elF:.9}]]},
+  write:{T:1,seated:1,keys:[[0,{shN:.72,elN:.75,shF:.55,elF:1,sp:.22,nk:.35}],[.5,{shN:.78,elN:.66,shF:.55,elF:1,sp:.22,nk:.35}]]},
+  sleep:{T:4,seated:1,keys:[[0,{sp:1.0,ch:.1,nk:.3,shN:1.2,elN:.45,shF:1.15,elF:.5}],[.5,{sp:.96,ch:.08,nk:.32,shN:1.18,elN:.45,shF:1.13,elF:.5}]]},
+  listen:{T:3.5,seated:1,keys:[[0,{shN:.45,elN:1.1,shF:.4,elF:1.1,nk:-.05}],[.5,{shN:.45,elN:1.15,nk:.02}]]},
+};
+const SIT={sp:-.04,thN:1.38,knN:1.4,thF:1.34,knF:1.36,shN:.35,elN:.9,shF:.3,elF:.95};
+function interpKeys(keys,u){
+  let i=keys.length-1;for(let j=0;j<keys.length;j++)if(keys[j][0]<=u)i=j;
+  const a=keys[i],b=keys[(i+1)%keys.length],t0=a[0],t1=b[0]<=t0?b[0]+1:b[0],f=smooth(clamp((u-t0)/(t1-t0),0,1)),o={};
+  const ks=new Set([...Object.keys(a[1]),...Object.keys(b[1])]);
+  for(const k of ks){const va=a[1][k]??null,vb=b[1][k]??null;o[k]=va===null?vb:vb===null?va:lerp(va,vb,f);}
+  return o;
+}
+function pose(name,t){
+  const c=CLIPS[name]||CLIPS.stand,q=Object.assign({},POSE0,c.seated?SIT:{});
+  // fill keys missing from a key with the clip's first key so interpolation stays in-clip
+  return Object.assign(q,interpKeys(c.keys,((t/c.T)%1+1)%1));
+}
+
+/* ---------- characters ---------- */
+const SKIN={a:S(.3,.1,0,0),b:S(.38,.16,0,.05),c:S(.5,.3,0,.22),d:S(.22,.07,0,0)};
+const HAIRC=S(0,.12,0,1),HAIRB=S(.45,.4,0,.55);
+const CHARS={
+  john:{skin:SKIN.a,hair:'fringe',hc:HAIRC,top:{t:'shirt',sp:S(.05,.02,0,0),sl:1},bot:{t:'pants',sp:S(0,0,.15,.72)},shoe:S(.4,.4,0,.55)},
+};
+const person=(base,over)=>Object.assign({},base,over);
+
+/* ---------- drawing a figure ---------- */
+const HS=1.1,SHADE=S(0,0,0,.2,{ko:false,ol:0});
+function hp(J,v){const a=J.a3,c=cs(a),s=sn(a),x=v[0]*HS,y=v[1]*HS;return[J.Hc[0]+x*c-y*s,J.Hc[1]+x*s+y*c];}
+const lerp2=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+function drawFigure(p,c,q,X,Y,f,sc,o={}){
+  const J=fk(q),M=v=>[X+f*v[0]*sc,Y+v[1]*sc],MP=a=>a.map(M);
+  const px=150*sc*(p.ds||p.s),lvl=px<26?0:px<80?1:2,fine=px>200,ow=lvl>1?1.05:0;
+  const sp=(s,dark)=>{const r=Object.assign({},s,{ol:ow});if(dark)r.N=Math.min(1,(r.N||0)+.22);return r;};
+  const L=(pts,w=.8,d=1,ink=3)=>{if(lvl>1)p.line(MP(pts),w,ink,{d});};
+  // light comes from the upper left of the sheet, so every volume carries a
+  // band of Federal Blue on the side that faces screen right
+  const shade=(a,b,wa,wb)=>{if(lvl<2)return;const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;let nx=-dy/l,ny=dx/l;if(nx*f<0){nx=-nx;ny=-ny;}
+    p.fill(MP(capsule([a[0]+nx*wa*.28,a[1]+ny*wa*.28],[b[0]+nx*wb*.28,b[1]+ny*wb*.28],wa*.44,wb*.44)),SHADE);};
+  const limb=(a,b,wa,wb,bul,s)=>{p.fill(MP(capsule(a,b,wa,wb,bul)),s);shade(a,b,wa,wb);};
+  const skin=c.skin,top=c.top,bot=c.bot;
+  // contact shadow
+  p.fill(ellipse(X,Y,30*sc,9*sc,16),S(0,0,0,.28,{ko:false,ol:0}));
+  if(o.pre)o.pre(p,M,J);
+  const hand=(A,s)=>{
+    const l=Math.hypot(A.hd[0]-A.wr[0],A.hd[1]-A.wr[1])||1,ux=(A.hd[0]-A.wr[0])/l,uy=(A.hd[1]-A.wr[1])/l,nx=-uy,ny=ux;
+    const Hh=(a,b)=>[A.wr[0]+ux*a+nx*b,A.wr[1]+uy*a+ny*b];
+    p.fill(MP(capsule(Hh(1.5,2),Hh(6.2,4.8),3.8,2.9)),s);
+    p.fill(MP(smoothPts([Hh(-1.2,-3.3),Hh(5,-3.9),Hh(9.4,-2.8),Hh(10.8,0),Hh(9.4,2.5),Hh(5,3.4),Hh(-1.2,3.1)],true,2)),s);
+    if(fine){L([Hh(8,-1.3),Hh(10.3,-1.1)],.45,.7);L([Hh(8,.8),Hh(10.1,1.1)],.45,.7);}
+  };
+  const arm=(A,dark)=>{
+    const sl=sp(top.sp,dark),sk=sp(skin,dark);
+    if(top.t==='gown'){
+      p.fill(MP(capsule(lerp2(A.el,A.wr,.62),A.wr,8.5,8)),sp(S(.03,.01),dark));
+      limb(A.sj,A.el,15,14.5,1,sl);const e2=lerp2(A.el,A.wr,.78);limb(A.el,e2,14.5,22,0,sl);
+      L([lerp2(A.el,e2,.3),lerp2(A.sj,A.el,.6)],.6,.7);L([lerp2(A.el,e2,.95),lerp2(A.el,e2,.55)],.6,.7);
+    }else if(!top.sl){
+      limb(A.sj,A.el,10,8,1,sk);limb(A.el,A.wr,8,6.5,0,sk);
+      const mid=lerp2(A.sj,A.el,.55);limb(A.sj,mid,14.5,12.5,0,sl);
+    }else{
+      limb(A.sj,A.el,13,10.5,1,sl);limb(A.el,A.wr,10.5,9,0,sl);
+      L([add(A.el,dl(A.a+1.6,-3)),add(A.el,dl(A.a+1.1,-5.5))],.7,.8);L([lerp2(A.sj,A.el,.35),lerp2(A.sj,A.el,.6)],.55,.6);
+      L([add(A.wr,dl(A.a+1.57,-4.8)),add(A.wr,dl(A.a+1.57,4.8))],.7,.9);
+    }
+    hand(A,sk);
+  };
+  const leg=(G,dark)=>{
+    const pa=sp(bot.sp,dark),sk=sp(skin,dark),sh=sp(c.shoe,dark);
+    const fd=[G.toe[0]-G.ank[0],G.toe[1]-G.ank[1]],fl=Math.hypot(fd[0],fd[1])||1,fx=fd[0]/fl,fy=fd[1]/fl,nx=-fy,ny=fx;
+    const F=(a,b)=>[G.ank[0]+fx*a+nx*b,G.ank[1]+fy*a+ny*b];
+    p.fill(MP(smoothPts([F(-5,-4.5),F(-5.8,4.6),F(15,5.2),F(17.4,2.2),F(14,-.6),F(8,-2),F(2.5,-5.5)],true,2)),sh);
+    L([F(-5.6,3.6),F(16.4,4)],.7,.8);if(fine){L([F(5,-2.6),F(8,-1.6)],.5,.7);}
+    if(bot.t==='pants'||bot.t==='gown'){
+      limb(G.knee,G.ank,13,11.5,1.4,pa);limb(G.hip,G.knee,18.5,13.5,1.6,pa);
+      L([add(G.knee,[-3,-4]),add(G.knee,[2,1])],.7,.8);L([add(G.knee,[-5,3]),add(G.knee,[-1,6])],.6,.7);
+      L([lerp2(G.knee,G.ank,.86),add(lerp2(G.knee,G.ank,.9),[4,1])],.6,.7);
+    }else{
+      limb(G.knee,G.ank,10.5,7,2,sk);limb(G.hip,G.knee,bot.t==='shorts'?17:15,11,1.4,sk);
+      if(bot.t==='shorts')limb(G.hip,lerp2(G.hip,G.knee,.62),19.5,17,0,pa);
+    }
+  };
+  if(c.hair==='long'&&lvl){p.fill(MP(HAIR.longBack.map(v=>hp(J,v))),sp(c.hc));}
+  arm(J.aF,true);leg(J.F,true);
+  p.fill(MP(ellipse(J.P[0],J.P[1]+1,13,10.5,14,J.a1)),sp(bot.sp));
+  leg(J.N,false);
+  if(bot.t==='skirt'){const k=J.N.knee,kf=J.F.knee;p.fill(MP([at(J.P,J.a1,4,-12.5),at(J.P,J.a1,4,11.5),[Math.max(k[0],kf[0])+9,Math.max(k[1],kf[1])-2],[Math.min(k[0],J.P[0])-12,Math.max(k[1],J.P[1]+22)]]),sp(bot.sp));
+    L([at(J.P,J.a1,0,2),lerp2(J.P,k,.8)],.6,.7);}
+  // neck and torso
+  p.fill(MP(capsule(J.Sh,add(J.Nk,upv(J.a3,2.5)),9.5,8.5)),sp(skin,true));
+  const a1=J.a1,a2=J.a2,P=J.P,C1=J.C1,Sh=J.Sh,hy=-P[1];let hem=6,wb=12.5,wf=12;
+  if(top.t==='coat'){hem=26;wb=14;wf=13.5;}
+  // torso outline as [base, angle, along-spine, across] so the shaded side can be derived from it
+  let T=[[P,a1,-hem,-wb],[C1,a1,-2,-10.4],[Sh,a2,-8,-11.6],[Sh,a2,0,-8.2],[Sh,a2,2,-3.4],[Sh,a2,1.4,4.6],[Sh,a2,-7,11.8],[C1,a1,0,10.4],[P,a1,-hem,wf]];
+  if(top.t==='gown')T=[[P,0,-(hy-7),-19],[C1,a1,-2,-12],[Sh,a2,-8,-13],[Sh,a2,0,-8.8],[Sh,a2,2,-3.4],[Sh,a2,1.4,4.6],[Sh,a2,-7,12.5],[C1,a1,0,12],[P,0,-(hy-7),19]];
+  const tor=T.map(t=>at(...t));
+  p.fill(MP(smoothPts(tor,true,3)),sp(top.sp));
+  if(lvl>1){
+    // shaded side of the torso: the front when facing right, the back when facing left
+    const side=f>0?1:-1,edge=T.filter(t=>t[3]*side>3);
+    const outer=edge.map(t=>at(...t)),inner=edge.map(t=>at(t[0],t[1],t[2],t[3]-side*5.5)).reverse();
+    p.fill(MP(smoothPts(outer.concat(inner),true,2)),SHADE);
+    if(top.t==='shirt'||top.t==='gown'){
+      p.fill(MP([at(Sh,a2,3,5.4),at(Sh,a2,-3.4,8.4),at(Sh,a2,-.6,2.6)]),sp(top.t==='gown'?S(.03,.01):top.sp));
+      if(top.t==='shirt')for(let i=0;i<3;i++)p.fill(MP(ellipse(...at(Sh,a2,-9-i*9,7.6-i*.6),.9,.9,6)),S(0,0,0,.7,{ol:0}));}
+    if(top.t==='shirt'&&top.sl)L([at(Sh,a2,-9,1),at(Sh,a2,-9,6.5),at(Sh,a2,-14,6.5)],.55,.6);
+    if(top.t==='coat'){L([at(Sh,a2,1,4),at(C1,a1,4,9),at(P,a1,-hem+1,11)],.9);L([at(Sh,a2,1,4),at(Sh,a2,-9,1.5),at(Sh,a2,-13,8)],.8);
+      for(let i=0;i<2;i++)p.fill(MP(ellipse(...at(C1,a1,4-i*10,8.2),1,1,6)),S(0,0,0,.8,{ol:0}));L([at(P,a1,-6,2),at(P,a1,-6,9)],.6,.7);}
+    if(top.t==='hoodie'){p.fill(MP(smoothPts([at(Sh,a2,3,-9),at(Sh,a2,9,-6),at(Sh,a2,3,1),at(Sh,a2,-2,-3)],true,2)),sp(top.sp,true));
+      L([at(Sh,a2,0,4.6),at(Sh,a2,-10,5.4)],.6,.9);L([at(Sh,a2,0,2.6),at(Sh,a2,-9,3)],.6,.9);
+      L([at(C1,a1,-6,1),at(C1,a1,-4,9),at(P,a1,-4,10)],.6,.7);}
+    if(top.t==='gown'){L([at(Sh,a2,-4,-9),at(Sh,a2,-2,0),at(Sh,a2,-4,10)],.6,.7);
+      for(let i=-1;i<=1;i++)L([at(C1,a1,-2,i*6),[P[0]+i*10,-9]],.6,.55);
+      p.line(MP([at(Sh,a2,1,5),at(C1,a1,-2,9.5),at(P,a1,-14,10)]),1.6,2);p.fill(MP(capsule(at(P,a1,-14,10),at(P,a1,-22,10.5),3,4)),S(0,0,.85,0,{ol:.5}));}
+    L([at(C1,a1,6,-6),at(C1,a1,-3,-2)],.6,.7);L([at(P,a1,4,-10),at(P,a1,4,9)],.7,.6);
+  }
+  if(top.tie&&lvl>1)p.fill(MP([at(Sh,a2,1,3.4),at(Sh,a2,1,6),at(C1,a1,4,9.6),at(C1,a1,6,8)]),sp(top.tie));
+  // head
+  const H=v=>hp(J,v);
+  p.fill(MP(HEAD.map(H)),sp(skin));
+  if(lvl){
+    if(lvl>1){p.fill(MP(ellipse(...H([-3.4,1.2]),2.3*HS,3.3*HS,10,J.a3)),sp(skin,true));L([H([-3.6,-.4]),H([-2.8,1.4]),H([-3.6,2.6])],.5,.8);
+      p.fill(MP([H([7.2,2.6]),H([9.6,2.7]),H([8.6,3.9]),H([6.8,3.7])]),S(0,.25,0,0,{ko:false,ol:0}));}
+    const hs=c.hair;
+    if(hs==='curly'){const bumps=[];for(let i=0;i<14;i++){const a=Math.PI*.95+i/13*Math.PI*1.1;bumps.push(H([Math.cos(a)*10.5-1,Math.sin(a)*11.5-1.5]));bumps.push(H([Math.cos(a+.12)*12.2-1,Math.sin(a+.12)*13.2-1.5]));}
+      bumps.push(H([-2,-3]),H([-8,3]));p.fill(MP(bumps),sp(c.hc));
+      if(lvl>1)for(let i=0;i<5;i++){const a=Math.PI*1.05+i*.35;L([H([Math.cos(a)*7-1,Math.sin(a)*8-1.5]),H([Math.cos(a+.2)*8.5-1,Math.sin(a+.2)*9.5-1.5])],.6,1,-1);}}
+    else if(hs!=='bald'){const hh=HAIR[hs==='mortar'||hs==='postal'?'short':hs]||HAIR.short;p.fill(MP(hh.map(H)),sp(c.hc));
+      if(lvl>1&&hs!=='cap')for(let i=0;i<4;i++)p.line(MP([H([-6.5+i*3,-10.6+i*.3]),H([-2.6+i*3.3,-8.2+i*.5])]),.7,-1);
+      if(lvl>1&&hs==='long')for(let i=0;i<3;i++)p.line(MP([H([-9+i*.9,1+i*2]),H([-9.6+i*.6,12+i*2])]),.6,-1);}
+    if(hs==='bun')p.fill(MP(ellipse(...H([-7.4,-10.4]),4.6*HS,4.2*HS,12)),sp(c.hc));
+    if(hs==='mortar'){p.fill(MP([H([-8,-8]),H([8,-8]),H([8,-12]),H([-8,-12])]),sp(S(0,.85,0,.1)));
+      p.fill(MP([H([-15,-12.6]),H([1,-17.6]),H([16,-12.6]),H([0,-8.6])]),sp(S(0,.85,0,.15)));
+      p.line(MP([H([.5,-13]),H([10,-11]),H([12,-3])]),1.1,2);p.fill(MP(capsule(H([12,-3]),H([12.5,3]),2.6,3.2)),S(0,0,.8,0,{ol:.5}));}
+    if(hs==='postal'){p.fill(MP([H([-9.4,-4]),H([-8.6,-11.4]),H([7,-12.4]),H([9.6,-5.4]),H([15,-4.4]),H([15,-3]),H([-9,-2.4])]),sp(S(0,0,.7,.35)));}
+    if(lvl>1){
+      const eye=(x,y,s)=>{
+        if(fine){p.fill(MP(smoothPts([H([x-1.7*s,y+.1]),H([x-.2*s,y-1.1*s]),H([x+1.5*s,y-.3*s]),H([x+.2*s,y+.8*s])],true,2)),S(.02,0,0,0,{ol:0}));
+          p.fill(MP(ellipse(...H([x+.35*s,y-.05]),.8*s*HS,1*s*HS,8,J.a3)),S(0,.1,0,1,{ol:0}));
+          L([H([x-1.8*s,y+.1]),H([x-.2*s,y-1.2*s]),H([x+1.6*s,y-.4*s])],.75);}
+        else p.fill(MP(ellipse(...H([x,y]),1.05*s*HS,1.3*s*HS,8,J.a3)),S(0,.1,0,1,{ol:0}));};
+      eye(2.4,-.4,1);eye(7,-.6,.78);
+      L([H([.1,-3.3]),H([2.4,-4.1]),H([4.5,-3.5])],1.25);L([H([5.9,-3.8]),H([8.2,-3.4])],1.1);
+      L([H([7.4,-1.2]),H([9.6,2.5]),H([7.6,3.5])],.75);
+      L([H([3.6,6.2]),H([5,6.5]),H([6.7,6])],.85);
+      if(fine)p.fill(MP([H([4,6.8]),H([6.4,6.6]),H([5.6,7.6]),H([4.4,7.6])]),S(0,.3,0,0,{ko:false,ol:0}));
+      if(c.glasses){p.outline(MP(ellipse(...H([2.4,-.4]),2.7*HS,2.4*HS,12)),.8);p.outline(MP(ellipse(...H([7.3,-.5]),1.7*HS,2.3*HS,10)),.8);L([H([5.1,-.6]),H([5.6,-.7])],.7);L([H([-.3,-.6]),H([-4,-.2])],.7);}
+      if(c.beard)p.fill(MP([H([-3.2,5]),H([.2,10.4]),H([4,11.4]),H([7.4,9]),H([8.4,6.6]),H([6.6,7.6]),H([4,7.2]),H([1.6,8]),H([-.6,5.8])]),sp(c.hc));
+    }
+  }
+  arm(J.aN,false);
+  if(o.post)o.post(p,M,J,lvl);
+}
+
+/* ---------- props held or sat on ---------- */
+const PROPS={
+  book:(p,M,J)=>{const h=J.aN.hd,w=J.aF.hd,a=[(h[0]+w[0])/2+2,(h[1]+w[1])/2-3];
+    p.fill([M([a[0]-9,a[1]-7]),M([a[0]+1,a[1]-9]),M([a[0]+2,a[1]+5]),M([a[0]-8,a[1]+6])],S(0,.1,0,0,{ol:.8}));
+    p.fill([M([a[0]+1,a[1]-9]),M([a[0]+11,a[1]-6]),M([a[0]+10,a[1]+6]),M([a[0]+2,a[1]+5])],S(.05,0,0,0,{ol:.8}));
+    p.fill([M([a[0]-9,a[1]-7]),M([a[0]-11,a[1]-6]),M([a[0]-10,a[1]+7]),M([a[0]-8,a[1]+6])],S(0,.85,0,0,{ol:.6}));},
+  mug:(p,M,J)=>{const h=J.aN.hd;const P=(x,y)=>M([h[0]+x,h[1]+y]);
+    p.fill([P(-3,-9),P(6,-9),P(5.5,3),P(-2.5,3)],S(0,0,.8,0,{ol:.8}));p.fill([P(-3,-4.5),P(6,-4.5),P(5.8,-2),P(-2.8,-2)],S(0,.9,0,0,{ol:0}));},
+  ctrl:(p,M,J)=>{const h=J.aN.hd;p.fill(ellipse(...M([h[0]-1,h[1]-2]),9*1.1,4.5*1.1,12),S(0,0,0,.8,{ol:.7}));},
+  paper:(p,M,J)=>{const h=J.aN.hd;p.fill([M([h[0]-4,h[1]-14]),M([h[0]+9,h[1]-12]),M([h[0]+7,h[1]+6]),M([h[0]-6,h[1]+4])],S(.04,0,0,0,{ol:.8}));
+    for(let i=0;i<3;i++)p.line([M([h[0]-2,h[1]-9+i*4]),M([h[0]+6,h[1]-8+i*4])],.6,3,{d:.6});},
+  box:(p,M,J)=>{const h=J.aN.hd;p.fill([M([h[0]-14,h[1]-20]),M([h[0]+10,h[1]-20]),M([h[0]+10,h[1]+2]),M([h[0]-14,h[1]+2])],S(.45,.3,0,.1,{ol:1}));
+    p.fill([M([h[0]-14,h[1]-20]),M([h[0]+10,h[1]-20]),M([h[0]+13,h[1]-24]),M([h[0]-11,h[1]-24])],S(.4,.25,0,0,{ol:.8}));},
+  stack:(p,M,J)=>{const h=J.aN.hd;for(let i=0;i<5;i++)p.fill([M([h[0]-14,h[1]-3-i*3]),M([h[0]+12,h[1]-3-i*3]),M([h[0]+14,h[1]-6-i*3]),M([h[0]-12,h[1]-6-i*3])],S(.03,0,0,0,{ol:.6}));},
+  chalk:(p,M,J)=>{const h=J.aN.hd,e=add(h,dl(J.aN.a,5));p.line([M(h),M(e)],2.2,-1);},
+  pointer:(p,M,J)=>{const h=J.aN.hd,e=add(h,dl(J.aN.a,40));p.line([M(h),M(e)],1.6,0,{d:1});},
+  letter:(p,M,J)=>{const h=J.aN.hd;p.fill([M([h[0]-2,h[1]-9]),M([h[0]+14,h[1]-9]),M([h[0]+14,h[1]+1]),M([h[0]-2,h[1]+1])],S(.12,.05,0,0,{ol:.8}));
+    p.line([M([h[0]-2,h[1]-9]),M([h[0]+6,h[1]-3]),M([h[0]+14,h[1]-9])],.7);},
+  phone:(p,M,J)=>{const h=J.aN.hd;p.fill([M([h[0]-2,h[1]-10]),M([h[0]+4,h[1]-10]),M([h[0]+4,h[1]+2]),M([h[0]-2,h[1]+2])],S(0,0,.4,.6,{ol:.6}));},
+};
+/* =====================================================================
+   7. The twelve rooms
+   ===================================================================== */
+// people who appear
+const JOHN=CHARS.john;
+const JOHN_TEACH=person(JOHN,{top:{t:'shirt',sp:S(.08,.03,0,0),sl:1},bot:{t:'pants',sp:S(0,0,0,.8)}});
+const JOHN_HOODIE=person(JOHN,{top:{t:'hoodie',sp:S(0,0,.72,.05),sl:1},bot:{t:'pants',sp:S(.1,.05,.1,.55)}});
+const JOHN_GOWN=person(JOHN,{hair:'mortar',top:{t:'gown',sp:S(0,.88,0,.08),sl:1,tie:S(0,0,0,.9)},bot:{t:'gown',sp:S(0,.88,0,.12)},shoe:S(0,0,0,.85)});
+const JOHN_POLO=person(JOHN,{top:{t:'shirt',sp:S(0,.75,0,.05),sl:0},bot:{t:'pants',sp:S(.2,.1,0,.5)}});
+const STU=[
+  {skin:SKIN.d,hair:'long',hc:HAIRC,top:{t:'shirt',sp:S(.75,.1),sl:1},bot:{t:'skirt',sp:S(0,0,.1,.7)},shoe:S(0,0,0,.8)},
+  {skin:SKIN.b,hair:'short',hc:HAIRC,top:{t:'hoodie',sp:S(0,.2,.6,0),sl:1},bot:{t:'pants',sp:S(.4,.3,0,.4)},shoe:S(.05,0,0,0)},
+  {skin:SKIN.a,hair:'bun',hc:HAIRB,top:{t:'coat',sp:S(0,.6,0,.1),sl:1},bot:{t:'pants',sp:S(0,0,.2,.7)},shoe:S(0,.3,0,.6),glasses:1},
+  {skin:SKIN.b,hair:'cap',hc:S(0,0,.6,.35),top:{t:'shirt',sp:S(0,0,.1,.55),sl:0},bot:{t:'shorts',sp:S(.5,.3,0,.2)},shoe:S(.8,.3)},
+  {skin:SKIN.c,hair:'curly',hc:HAIRC,top:{t:'shirt',sp:S(.8,0,.2,0),sl:0},bot:{t:'pants',sp:S(0,0,.35,.6)},shoe:S(0,0,0,.8)}, // international student
+  {skin:SKIN.a,hair:'short',hc:HAIRB,top:{t:'shirt',sp:S(.1,.1,.4,0),sl:1},bot:{t:'pants',sp:S(0,0,0,.7)},shoe:S(0,0,0,.8),glasses:1},
+];
+const CLERK={skin:SKIN.b,hair:'postal',hc:HAIRC,top:{t:'coat',sp:S(0,0,.7,.3),sl:1},bot:{t:'pants',sp:S(0,0,.3,.7)},shoe:S(0,0,0,.85),beard:1};
+
+// simple animals, drawn live
+function drawChick(p,X,Y,f,t,sc){
+  const hop=Math.abs(Math.sin(t*9))*4*sc,M=v=>[X+f*v[0]*sc,Y+v[1]*sc-hop];
+  p.fill(ellipse(X,Y,9*sc,3*sc,10),S(0,0,0,.25,{ko:false,ol:0}));
+  p.fill([M([-8,-10]),M([-3,-15]),M([5,-14]),M([8,-8]),M([4,-3]),M([-5,-3])],S(.85,.05,0,0,{ol:.8}));
+  p.fill(ellipse(...M([6,-18]),5.5*sc,5*sc,10),S(.85,.05,0,0,{ol:.8}));
+  p.fill([M([11,-18.5]),M([15,-17]),M([11,-16])],S(.6,.7,0,0,{ol:.4}));
+  p.fill(ellipse(...M([8,-19.5]),.9*sc,.9*sc,6),S(0,0,0,1,{ol:0}));
+  p.line([M([-1,-3]),M([-1,1])],.8,1);p.line([M([2,-3]),M([3,1])],.8,1);
+}
+function catSleeping(p,x,y){const c=iso(x,y,0);
+  p.fill(ellipse(c[0],c[1],34,11,14),S(0,0,0,.25,{ko:false,ol:0}));
+  p.fill(ellipse(c[0],c[1]-9,30,14,18),S(.7,.35,0,.08,{ol:1}));
+  p.fill(ellipse(c[0]+22,c[1]-11,11,9,12),S(.7,.35,0,.08,{ol:1}));
+  p.fill([[c[0]+16,c[1]-17],[c[0]+19,c[1]-26],[c[0]+23,c[1]-18]],S(.7,.35,0,.1,{ol:.8}));p.fill([[c[0]+25,c[1]-18],[c[0]+30,c[1]-25],[c[0]+31,c[1]-15]],S(.7,.35,0,.1,{ol:.8}));
+  p.line([[c[0]-28,c[1]-6],[c[0]-10,c[1]+4],[c[0]+12,c[1]+3]],3,0,{d:.8});
+  for(let i=0;i<4;i++)p.line([[c[0]-18+i*9,c[1]-20],[c[0]-14+i*9,c[1]-8]],.9,2,{d:.6});
+  p.line([[c[0]+19,c[1]-10],[c[0]+23,c[1]-9]],.7);p.line([[c[0]+26,c[1]-10],[c[0]+29,c[1]-10]],.7);}
+function pennant(p,W,u,v,sp){p.fill([W(u,v),W(u+1.2,v-.3),W(u,v-.6)],Object.assign({},sp,{ol:1}));}
+
+const ROOMS=[
+/* I ------------------------------------------------------------------ */
+{n:'I',title:'Hello, I’m John',accent:1,
+ quote:'Educator and tech enthusiast who loves learning and building things. I teach by day and explore web and mobile development by curiosity, chasing better tools, better craft, and experiences worth caring about.',
+ meta:['John Fredrick N. Lim','Zamboanga, Philippines'],links:[['GitHub','https://github.com/yoyodevc'],['LinkedIn','https://www.linkedin.com/in/johnfredricklim/']],
+ build(p){const r=mulberry(11);
+  shell(p,{panel:S(.16,.06),panelDots:0,wallL:S(.12,.06),wallR:S(.04,0,.14),floor:S(.3,.12,0,.04),planks:1,seed:2});
+  windowW(p,'L',1.1,2.1,3.4,2.8,'sea');
+  frame(p,'L',6,2.6,2.2,2.2,(p,M)=>{p.fill(mapPts(M,ellipse(.5,.5,.32,.32,20)),S(0,.8,0,0,{ol:0}));p.fill(mapPts(M,[[.2,.9],[.5,.3],[.8,.9]]),S(0,0,.8,0,{ol:0}));p.fill(mapPts(M,rect(.55,.55,.3,.3)),S(.85,0,0,0,{ol:0}));});
+  bookcase(p,'R',.5,2,3.4,r);
+  wallShelf(p,'R',4.6,3.7,3.2,r);
+  frame(p,'R',8.4,2.2,1.2,1.5,(p,M)=>{for(let i=0;i<3;i++)p.fill(mapPts(M,rect(.1+i*.08,.12+i*.22,.7,.16)),S([.6,0,0][i],[0,.5,0][i],[0,0,.6][i],0,{ol:.5}));},S(.4,.25,0,.1));
+  desk(p,4.4,.3,3.8,1.4,1.5,TONE.wood);
+  monitor(p,5.4,.45,1.5,1.3,.8,'+y',codeLines(3));
+  deskLamp(p,7.5,.55,1.5);
+  mugMotif(p,4.9,1.2,1.5,1.1);
+  laptop(p,6.9,.7,1.5,'+y',codeLines(8));
+  rug(p,2.6,4.2,4.4,3.6,S(0,.55,0,.05),S(.8,0,0,0));
+  plant(p,.9,8.9,0,1.3);plant(p,9,1.3,0,1);
+  catSleeping(p,4.6,6.4);
+ },
+ figs:[{c:JOHN_HOODIE,plan:[{at:[6.3,2.4],do:'type',dur:7,face:'-y',seat:{z:.9,live:1,sp:S(0,.7,0,.1)}},{do:'drink',dur:4.5,face:'-y',seat:{z:.9,live:1,sp:S(0,.7,0,.1)},prop:'mug'},
+   {walk:[5,3.6]},{walk:[2.2,3.2]},{do:'think',dur:5,face:'-x'},{walk:[4.6,4]},{walk:[6.3,2.4]}]}]},
+/* II ----------------------------------------------------------------- */
+{n:'II',title:'Engineering with Intention',accent:2,
+ quote:'I’m drawn to work where design and engineering overlap. I care about things like transition timing, focus management, and whether a form error is actually helpful. Not because perfection is the goal, but because users notice when something feels right.',
+ meta:['Top of the stack','React · Next.js · TypeScript · Tailwind CSS · Node.js · PostgreSQL · Expo'],links:[],
+ build(p){const r=mulberry(22);
+  shell(p,{panel:S(0,0,.13),wallL:S(0,0,.2),wallR:S(.14,.06),floor:S(.4,.25,0,.2),planks:1,seed:4,cap:S(.1,.1,0,.1)});
+  bookcase(p,'L',.4,4.2,4.4,r);bookcase(p,'L',4.8,2.4,4.4,r);
+  windowW(p,'R',1.8,2.4,2.4,2.4,'city');
+  frame(p,'R',5,2.3,2.2,2.8,(p,M)=>{p.fill(mapPts(M,[[.15,.85],[.5,.12],[.85,.85]]),S(0,.85,0,0,{ol:0}));p.fill(mapPts(M,ellipse(.5,.62,.2,.2,18)),S(.85,0,0,0,{ol:0,ko:false}));
+    p.fill(mapPts(M,rect(.3,.2,.12,.5)),S(0,0,.8,0,{ol:0,ko:false}));},S(0,0,0,.8));
+  frame(p,'R',7.7,3,1,1.2,(p,M)=>mug2D(p,M,.5,.55,.55),S(.3,.3,0,.3));
+  clock(p,'R',8.6,5.2,.35,.6);
+  rug(p,3,3.6,4.6,4.6,S(0,.7,0,.1),S(.8,0,0,0));
+  floorLamp(p,3.4,3.3);
+  // armchair (back towards the wall, the reader faces the room)
+  box(p,4.5,4.6,0,1.6,1.7,.75,S(0,0,.7,.1));box(p,4.3,4.6,0,.35,1.7,2.3,S(0,0,.75,.15));
+  box(p,4.5,4.45,0,1.6,.3,1.25,S(0,0,.72,.12));
+  // side table with books and a cup
+  cyl(p,7.4,3.2,0,.1,1.1,TONE.woodD);cyl(p,7.4,3.2,1.1,.55,.08,TONE.wood);
+  box(p,7.1,3,1.18,.6,.45,.12,S(0,.8));box(p,7.15,3.05,1.3,.5,.4,.1,S(.8));
+  for(let i=0;i<4;i++)box(p,1+i*.05,8.3,i*.14,.9,.6,.14,[S(0,.8),S(0,0,.8),S(.85),S(0,0,0,.7)][i],{lw:.7});
+  plant(p,8.8,1.2,0,1.2);
+ },
+ figs:[{c:JOHN,plan:[{at:[5.3,5.4],do:'read',dur:9,face:'+x',seat:{z:.75},prop:'book'},{walk:[2.4,5.4]},{walk:[1.4,3]},{do:'hold',dur:3.5,face:'-x',prop:'book'},{walk:[2.6,5.6]},{walk:[5.3,5.4]}]}]},
+/* III ---------------------------------------------------------------- */
+{n:'III',title:'Hatchify',accent:1,
+ quote:'Graduated with a focus on software engineering fundamentals, algorithms, and systems programming. Completed a capstone project on a remote real-time monitoring system and automated egg incubator.',
+ meta:['B.S. Information Technology · 2021–2025','Western Mindanao State University','Best Capstone Award for Hatchify, a real-time egg incubator monitoring and alert system'],links:[],
+ build(p){const r=mulberry(33);
+  shell(p,{panel:S(.2,.02),wallL:S(.05,0,.1),wallR:S(.12,.06),floor:S(0,0,.06),tiles:S(0,0,.12),seed:6});
+  frame(p,'L',1.4,3,2.2,1.6,(p,M)=>{p.fill(mapPts(M,ellipse(.78,.7,.12,.16,16)),S(0,.9,0,0,{ol:.5}));for(let i=0;i<4;i++)p.line(mapPts(M,[[.12,.25+i*.13],[.62-i*.06,.25+i*.13]]),.8,3,{d:.7});},S(.3,.2,0,.3));
+  wallShelf(p,'L',4.2,4.1,2.6,r,TONE.wood,false);
+  // mortarboard on the shelf
+  box(p,.12,4.9,4.19,.4,.5,.12,S(0,.85,0,.2));const mb=[iso(-.05,4.6,4.34),iso(.75,4.8,4.34),iso(.6,5.8,4.34),iso(-.2,5.6,4.34)];p.fill(mb,S(0,.85,0,.15));
+  p.line([iso(.3,5.2,4.35),iso(.7,5.7,4.34),iso(.7,5.7,3.7)],1,2);
+  pennant(p,WL,7.4,5.2,S(0,.85));
+  // workbench and the incubator
+  desk(p,.9,.3,6.6,1.5,1.5,S(.2,.05,0,.2),{leg:TONE.metal});
+  const ix=1.3,iy=.4,iz=1.5;box(p,ix,iy,iz,1.8,1.2,1.3,S(.05,0,.55,.05));
+  const G=(s,t)=>iso(ix+.15+s*1.5,iy+1.201,iz+1.15-t*.95);
+  p.fill(mapPts(G,rect(0,0,1,1)),S(.3,.1,0,.2,{ol:1}));
+  rings(p,f=>mapPts(G,ellipse(.5,.2,.5*f,.5*f,20)),4,0,.85);
+  for(let i=0;i<5;i++){const e=G(.12+i*.19,.78);p.fill(ellipse(e[0],e[1]-2,7,9,12),S(.06,.08,0,0,{ol:.8}));}
+  cyl(p,ix+.9,iy+.6,iz+1.3,.12,.18,TONE.navy);
+  // breadboard, wires, sensor
+  box(p,3.5,.5,1.5,1,.6,.08,S(0,0,0,.1));for(let i=0;i<5;i++)box(p,3.6+i*.16,.62,1.58,.1,.1,.05,[S(0,.9),S(.9),S(0,0,.9)][i%3],{lw:.5});
+  p.line([iso(3.3,.8,2.4),iso(3.4,.7,1.9),iso(3.6,.7,1.6)],1.3,1);p.line([iso(3.2,1,2.2),iso(3.5,1,1.8),iso(3.9,.9,1.6)],1.3,2);
+  laptop(p,4.9,.5,1.5,'+y',(p,M)=>{const pts=[];for(let i=0;i<10;i++)pts.push([.08+i*.09,.7-Math.sin(i*.9)*.2-i*.03]);p.line(mapPts(M,pts),1.2,0);p.fill(mapPts(M,rect(.72,.12,.16,.14)),S(0,.9,0,0,{ol:0,ko:false}));});
+  // phone on a stand with the alert
+  box(p,6.2,.6,1.5,.3,.12,.55,S(0,0,0,.85));p.fill([iso(6.23,.721,1.58),iso(6.47,.721,1.58),iso(6.47,.721,2),iso(6.23,.721,2)],S(0,.6,.2,0,{ol:.5}));
+  mugMotif(p,7,1.1,1.5);
+  // egg crates and a feed sack
+  for(let i=0;i<2;i++){box(p,.4,6.2+i*.1,i*.3,1.2,1,.3,S(.35,.3,0,.1));for(let j=0;j<6;j++){const e=iso(.6+(j%3)*.35,6.5+i*.1+Math.floor(j/3)*.4,.3+i*.3);p.fill(ellipse(e[0],e[1]-3,5,6,10),S(.05,.05,0,0,{ol:.6}));}}
+  box(p,.5,8,0,1,.9,1.1,S(.3,.2,0,0));
+  floorRings(p,5.8,6.2,0,1.4,4,0,.35);
+  // the award, the system on a whiteboard, a stool and a plant
+  box(p,7.9,.5,1.5,.5,.5,.2,TONE.navy);cyl(p,8.15,.75,1.7,.06,.3,S(.85,.1));cyl(p,8.15,.75,2,.24,.4,S(.85,.12,0,0,{ol:1}));
+  const Hb=surf(WL,6.6,1.6,2.8,1.8);p.fill(mapPts(Hb,rect(0,0,1,1)),S(.03,0,0,0,{ol:1.1}));
+  [[.08,'Y'],[.4,'T'],[.72,'R']].forEach(([x,k])=>{const sp={ko:false,ol:.8};sp[k]=.7;p.fill(mapPts(Hb,rect(x,.3,.2,.3)),sp);});
+  p.line(mapPts(Hb,[[.29,.45],[.39,.45]]),1);p.line(mapPts(Hb,[[.61,.45],[.71,.45]]),1);
+  mug2D(p,Hb,.5,.8,.06,S(0,0,.6));
+  stool(p,4.2,6.8);plant(p,9,1.2,0,1.2);
+ },
+ figs:[{c:JOHN_GOWN,plan:[{at:[2.6,2.8],do:'point',dur:4,face:'-y'},{walk:[4.6,4.2]},{do:'stand',dur:4,face:'+y'},{walk:[2.6,2.8]}]},
+   {c:STU[5],plan:[{at:[5.4,2.4],do:'type',dur:30,face:'-y',seat:{z:.9,live:1,sp:TONE.metal}}]},
+   {kind:'chick',plan:[{at:[5,5.6],do:'stand',dur:1.2},{walk:[7.4,6.4]},{do:'stand',dur:.8},{walk:[6.2,7.8]},{walk:[5,5.6]}],speed:.9},
+   {kind:'chick',plan:[{at:[6.6,5.2],do:'stand',dur:2},{walk:[5.2,6.8]},{do:'stand',dur:1},{walk:[6.6,5.2]}],speed:.7}]},
+/* IV ----------------------------------------------------------------- */
+{n:'IV',title:'The Lecture Hall',accent:3,
+ quote:'Taught core programming and technology subjects while actively contributing to student development inside and outside the classroom. Built genuine rapport with students through mentorship, org advising, and a shared passion for esports.',
+ meta:['College Instructor / Visiting Lecturer · AY 2025–2026','Zamboanga Peninsula Polytechnic State University','OOP · Database Systems · DSA · Computer Programming 2 · IoT'],links:[],
+ build(p){const r=mulberry(44);
+  shell(p,{panel:S(.1,0,.06),wallL:S(.12,.1),wallR:S(.08,.02,.04),floor:S(.35,.15,0,.1),planks:1,seed:8});
+  // chalkboard with a binary tree, a class box, a table and one chalk mug
+  const B=surf(WL,.7,1.7,6.4,2.9);
+  p.fill(wq(WL,.55,1.55,6.7,3.2),S(.4,.25,0,.3));p.fill(wq(WL,.7,1.7,6.4,2.9),S(0,.1,.55,.7,{ol:1}));
+  const ch=(pts,w=1)=>p.line(mapPts(B,pts),w,-1);
+  const nd=[[.15,.2],[.08,.45],[.22,.45],[.04,.7],[.12,.7],[.26,.7]];[[0,1],[0,2],[1,3],[1,4],[2,5]].forEach(([a,b])=>ch([nd[a],nd[b]]));
+  nd.forEach(([x,y])=>p.outline(mapPts(B,ellipse(x,y,.022,.05,10)),1.1,-1));
+  p.outline(mapPts(B,rect(.36,.15,.18,.55)),1.2,-1);ch([[.36,.3],[.54,.3]]);ch([[.36,.5],[.54,.5]]);for(let i=0;i<3;i++)ch([[.39,.2+i*.035],[.5,.2+i*.035]],.7);
+  ch([[.54,.4],[.62,.4]],1);ch([[.6,.36],[.62,.4],[.6,.44]],1);
+  p.outline(mapPts(B,rect(.64,.2,.22,.4)),1.1,-1);for(let i=1;i<4;i++)ch([[.64,.2+i*.1],[.86,.2+i*.1]],.7);ch([[.72,.2],[.72,.6]],.7);
+  const C=(s,t)=>B(.93+s*.05,.3+t*.13);ch([[.93,.3],[.98,.3],[.975,.43],[.935,.43],[.93,.3]].map(([a,b])=>[a,b]),1);ch([[.98,.34],[.995,.34],[.995,.39],[.978,.39]],.8);
+  box(p,.02,.8,1.6,.25,6.2,.08,S(.4,.25,0,.3));
+  windowW(p,'R',1.8,2.4,1.6,2.4,'sea');windowW(p,'R',4.8,2.4,1.6,2.4,'sea');
+  clock(p,'R',7.8,4.8,.4,1.1);
+  // teacher's desk
+  desk(p,1.2,7.2,1.3,2,1.5,TONE.woodD,{drawers:1});box(p,1.4,7.6,1.5,.5,.8,.25,S(0,0,.7));
+  // student desks
+  for(const [x,y] of [[4.2,2.6],[4.2,5.4],[6.9,2.6],[6.9,5.4]]){desk(p,x,y,.9,1.3,1.4,TONE.wood);box(p,x+.15,y+.3,1.4,.5,.6,.04,S(.05,0,0,0),{lw:.6});}
+ },
+ figs:[{c:JOHN_TEACH,plan:[{at:[1.7,2.4],do:'board',dur:3.2,face:'-x',prop:'chalk'},{walk:[1.7,4.8]},{do:'point',dur:3,face:'-x'},{walk:[2.4,6.2]},{do:'talk',dur:4,face:'+x'},{walk:[1.7,2.4]}]},
+   {c:STU[0],plan:[{at:[5.5,3.3],do:'write',dur:30,face:'-x',seat:{z:.85,live:1,sp:TONE.teal}}]},
+   {c:STU[1],plan:[{at:[5.5,6.1],do:'raise',dur:5,face:'-x',seat:{z:.85,live:1,sp:TONE.teal}},{do:'listen',dur:6,face:'-x',seat:{z:.85,live:1,sp:TONE.teal}}]},
+   {c:STU[4],plan:[{at:[8.2,3.3],do:'listen',dur:30,face:'-x',seat:{z:.85,live:1,sp:TONE.teal}}]},
+   {c:STU[2],plan:[{at:[8.2,6.1],do:'write',dur:30,face:'-x',seat:{z:.85,live:1,sp:TONE.teal}}],ph:.4}]},
+/* V ------------------------------------------------------------------ */
+{n:'V',title:'The Press Room',accent:1,
+ quote:'Served as adviser for the local publication organization, guiding students in editorial and organizational work.',
+ meta:['Publication Adviser','Cyber Claw Publication'],links:[],
+ build(p){const r=mulberry(55);
+  shell(p,{panel:S(0,.12),wallL:S(.16,.1),wallR:S(0,.06,.12),floor:S(.1,.05,0,.2),tiles:S(0,0,0,.08),seed:10});
+  // drying line with fresh prints, one of them a mug
+  p.line([WR(.4,5.1),WR(4.6,4.95),WR(9.6,5.15)],1);
+  for(let i=0;i<7;i++){const u=.8+i*1.25,M=surf(WR,u,3.5,.95,1.3);p.fill(mapPts(M,rect(0,0,1,1)),S(.03,.01,0,0,{ol:.8}));
+    if(i===4)mug2D(p,M,.5,.55,.55,S(0,0,.85));else{const k=i%3;p.fill(mapPts(M,ellipse(.5,.45,.28,.22,14)),S(k===0?.85:0,k===1?.8:0,k===2?.8:0,0,{ol:0,ko:false}));p.fill(mapPts(M,rect(.15,.75,.7,.08)),S(0,0,0,.6,{ol:0,ko:false}));}
+    p.fill(mapPts(M,rect(.45,-.06,.1,.14)),S(.4,.3,0,.2,{ol:.5}));}
+  // wolf mascot: a geometric head in teal and navy
+  const Wf=surf(WL,5.2,3.4,1.8,1.8);p.fill(mapPts(Wf,ellipse(.5,.5,.5,.5,24)),S(.05,0,0,.1,{ol:1}));
+  p.fill(mapPts(Wf,[[.2,.15],[.35,.4],[.5,.35],[.65,.4],[.8,.15],[.72,.55],[.5,.9],[.28,.55]]),S(0,0,.4,.75,{ol:.6}));
+  p.fill(mapPts(Wf,[[.38,.52],[.46,.55],[.4,.58]]),S(.9,0,0,0,{ol:0}));p.fill(mapPts(Wf,[[.62,.52],[.54,.55],[.6,.58]]),S(.9,0,0,0,{ol:0}));
+  // the risograph duplicator
+  box(p,.4,1,0,1.7,1.6,1.4,S(0,0,.1,.4));box(p,.6,1.2,1.4,1.3,1.2,.25,S(0,0,.15,.5));
+  cyl(p,1.25,1.8,1.65,.35,.15,S(0,.8,0,.2));
+  box(p,2.1,1.3,.9,.5,1,.06,S(0,0,0,.2));for(let i=0;i<5;i++)box(p,2.12,1.35,.96+i*.03,.45,.9,.03,S(.02),{lw:.4});
+  box(p,-.1+.5,2.6,.6,.8,.7,.05,S(0,0,0,.2));
+  // layout table with spreads
+  desk(p,3.4,4.4,3.2,1.8,1.45,S(.4,.2,0,.15));box(p,3.6,4.6,1.45,1.4,1.3,.02,S(0,0,.55),{lw:.7});
+  for(let i=0;i<3;i++){const x=3.7+i*.9,y=4.7+(i%2)*.2;p.fill(fq(x,y,.7,1,1.48),S(.02,0,0,0,{ol:.7}));p.fill(fq(x+.1,y+.1,.5,.35,1.49),[S(.8,0,0,0,{ol:0,ko:false}),S(0,.7,0,0,{ol:0,ko:false}),S(0,0,.7,0,{ol:0,ko:false})][i]);for(let j=0;j<3;j++)p.line([iso(x+.1,y+.55+j*.12,1.49),iso(x+.6,y+.55+j*.12,1.49)],.6,3,{d:.6});}
+  mugMotif(p,6.3,5.9,1.45);
+  // stacks of paper and a crate
+  for(let i=0;i<3;i++)box(p,.5,7+i*.02,i*.35,1.1,.8,.35,S(.03,.01),{lw:.7});box(p,.4,8.4,0,1.2,1,.9,S(.4,.25,0,.1));
+ },
+ figs:[{c:STU[3],plan:[{at:[3.1,2.3],do:'feed',dur:30,face:'-x'}]},
+   {c:JOHN_TEACH,plan:[{at:[5,7],do:'hold',dur:5,face:'-y',prop:'paper'},{walk:[7,6.8]},{do:'talk',dur:3,face:'-x'},{walk:[5,7]}]},
+   {c:STU[0],plan:[{at:[3.5,3.6],do:'stand',dur:.5},{walk:[2.8,6.6]},{do:'stand',dur:1,face:'-x',prop:'stack'},{walk:[3.5,3.6],clip:'walk',prop:'stack'},{do:'stand',dur:1.5,face:'-y'}]}]},
+/* VI ----------------------------------------------------------------- */
+{n:'VI',title:'Game Night',accent:1,
+ quote:'Fostered strong student engagement as an esports coach, creating a space that made learning feel approachable and motivating.',
+ meta:['Esports Coach','Zamboanga Peninsula Polytechnic State University'],links:[],
+ build(p){const r=mulberry(66);
+  shell(p,{panel:S(0,0,.18,.08),wallL:S(0,.05,.2,.6),wallR:S(0,.15,.1,.55),floor:S(0,0,.1,.4),tiles:S(0,0,0,.1),seed:12,cap:S(0,.1,0,.4)});
+  p.line([WL(.2,6),WL(9.8,6)],2.4,1);p.line([WR(.2,6),WR(9.8,6)],2.4,1);
+  // strategy board with lanes and arrows
+  const Bd=surf(WR,3.2,2.2,4,2.6);p.fill(wq(WR,3.1,2.1,4.2,2.8),S(0,0,0,.3));p.fill(mapPts(Bd,rect(0,0,1,1)),S(.03,0,0,0,{ol:1}));
+  p.fill(mapPts(Bd,[[.1,.9],[.1,.1],[.9,.1],[.9,.9]]),S(0,0,.25,0,{ol:0,ko:false}));
+  p.line(mapPts(Bd,[[.1,.9],[.9,.1]]),1.5,0);p.line(mapPts(Bd,[[.1,.1],[.1,.9],[.9,.9]]),1.2,0);p.line(mapPts(Bd,[[.1,.1],[.9,.1],[.9,.9]]),1.2,0);
+  p.line(mapPts(Bd,[[.3,.6],[.5,.5],[.62,.36]]),1.5,1);p.line(mapPts(Bd,[[.57,.33],[.62,.36],[.62,.42]]),1.5,1);
+  for(const [x,y] of [[.25,.75],[.35,.7],[.7,.3],[.78,.22]])p.fill(mapPts(Bd,ellipse(x,y,.03,.05,10)),S(0,x<.5?0:.9,x<.5?.9:0,0,{ol:.5}));
+  // trophy shelf, the mug hiding among the cups
+  wallShelf(p,'R',7.6,3.6,2.2,r,TONE.woodD,false);
+  for(let i=0;i<3;i++){cyl(p,7.9+i*.6,.25,3.68,.12,.08,S(0,0,0,.6));cyl(p,7.9+i*.6,.25,3.76,.05,.2,S(.85,.1));cyl(p,7.9+i*.6,.25,3.96,.2,.3,S(.85,.1,0,0,{ol:1}));}
+  mugMotif(p,9.5,.3,3.68,.9,false);
+  // three stations along the left wall
+  desk(p,.3,.9,1.4,8,1.5,S(.2,.35,0,.2),{leg:S(0,0,0,.7)});
+  for(let i=0;i<3;i++){const y=1.3+i*2.6;
+    rings(p,f=>isoEl(.9,y+.8,1.5,1.1*f,20,.9*f),3,2,.4);
+    monitor(p,.5,y,1.5,1.5,.9,'+x',(p,M)=>{p.fill(mapPts(M,rect(0,.55,1,.45)),S(.5,0,.6,0,{ol:0}));p.fill(mapPts(M,ellipse(.3,.4,.1,.12,10)),S(0,.9,0,0,{ol:0}));
+      p.line(mapPts(M,[[.5,.3],[.5,.7]]),1,-1);p.line(mapPts(M,[[.4,.5],[.6,.5]]),1,-1);p.fill(mapPts(M,rect(.05,.05,.3,.06)),S(.9,0,0,0,{ol:0}));});
+    box(p,1.1,y+.2,1.5,.35,1,.05,S(0,0,0,.9));p.fill(isoEl(1.3,y+1.4,1.52,.12,10),S(0,.7,0,.3));
+  }
+  cyl(p,1.4,8.6,1.5,.08,.25,S(0,0,.8,.1));cyl(p,1.1,8.5,1.5,.08,.25,S(.8,0,0,.1));
+ },
+ figs:[{c:STU[1],plan:[{at:[2.2,2.1],do:'game',dur:30,face:'-x',seat:{z:.95,live:1,sp:S(0,.85,0,.3)},prop:'ctrl'}]},
+   {c:STU[4],plan:[{at:[2.2,4.7],do:'game',dur:30,face:'-x',seat:{z:.95,live:1,sp:S(0,.85,0,.3)},prop:'ctrl'}],ph:.3},
+   {c:STU[0],plan:[{at:[2.2,7.3],do:'game',dur:30,face:'-x',seat:{z:.95,live:1,sp:S(0,.85,0,.3)},prop:'ctrl'}],ph:.6},
+   {c:JOHN_POLO,plan:[{at:[4.4,3.4],do:'point',dur:3,face:'-x'},{walk:[4.6,6]},{do:'talk',dur:3.5,face:'-x'},{do:'cheer',dur:2,face:'+y'},{walk:[5.4,3]},{do:'think',dur:3,face:'-y'},{walk:[4.4,3.4]}]}]},
+/* VII ---------------------------------------------------------------- */
+{n:'VII',title:'The Hackathon',accent:2,
+ quote:'Mentored students in hackathon competitions and supported an international student throughout their academic journey.',
+ meta:['Mentor','Zamboanga Peninsula Polytechnic State University'],links:[],
+ build(p){const r=mulberry(77);
+  shell(p,{panel:S(.18,.08),wallL:S(.2,.03),wallR:S(0,0,.14,.05),floor:S(0,.12,.12,.1),seed:14});
+  // sticky-note wall and flow arrows
+  const Wb=surf(WL,.8,2,5.4,2.8);p.fill(wq(WL,.7,1.9,5.6,3),S(0,0,0,.3));p.fill(mapPts(Wb,rect(0,0,1,1)),S(.02,0,0,0,{ol:1}));
+  for(let c=0;c<4;c++)for(let i=0;i<3+(c%2);i++){const x=.05+c*.24,y=.1+i*.2;p.fill(mapPts(Wb,rect(x+(r()-.5)*.02,y,.14,.15)),Object.assign({},[S(.8),S(0,.5),S(0,0,.5),S(.6,.3)][(c+i)%4],{ol:.5}));}
+  for(let c=0;c<3;c++){p.line(mapPts(Wb,[[.2+c*.24,.8],[.28+c*.24,.84]]),1,0);}
+  // string lights and a 3 a.m. clock
+  const lights=[];for(let i=0;i<=12;i++){const u=.4+i*.78,v=5.6-Math.sin(i/12*Math.PI)*.5;lights.push(WR(u,v));}p.line(lights,.8);
+  for(let i=1;i<12;i+=2){const q=lights[i];rings(p,f=>ellipse(q[0],q[1]+6,11*f,11*f,12),2,0,.6);p.fill(ellipse(q[0],q[1]+5,3.5,4.5,8),S(.9,.2,0,0,{ol:.5}));}
+  clock(p,'R',8.6,4.2,.4,-.9);
+  windowW(p,'R',1.6,2.4,2.4,2,'night');
+  // the long table
+  desk(p,2.4,3.6,5.2,1.6,1.5,TONE.woodL);
+  laptop(p,3.1,4.2,1.5,'+y',codeLines(71));laptop(p,5.4,4.3,1.5,'+y',codeLines(72));
+  laptop(p,6.6,3.8,1.5,'+x',codeLines(73));
+  // pizza box and cans
+  box(p,4.2,3.75,1.5,1,1,.05,S(.3,.2,0,.05));p.fill(isoEl(4.7,4.25,1.56,.38,18),S(.75,.45,0,0,{ol:.8}));for(let i=0;i<5;i++){const a=i/5*TAU,q=iso(4.7+Math.cos(a)*.2,4.25+Math.sin(a)*.2,1.57);p.fill(ellipse(q[0],q[1],4,3,8),S(0,.9,0,.1,{ol:0}));}
+  cyl(p,2.8,3.9,1.5,.08,.22,S(0,.8));cyl(p,7.2,4.9,1.5,.08,.22,S(0,0,.8));
+  mugMotif(p,6.3,4.9,1.5);
+  // beanbag and a backpack
+  p.fill(ellipse(...iso(8.4,1.4,0),60,34,20).map(([x,y])=>[x,y-18]),S(0,.5,0,.25));
+  box(p,1,8.6,0,.6,.4,.8,S(0,0,.6,.2));
+ },
+ figs:[{c:STU[4],plan:[{at:[3.7,6.1],do:'type',dur:30,face:'-y',seat:{z:.9,live:1,sp:S(.8,.2)}}]},
+   {c:STU[5],plan:[{at:[6,6.1],do:'sleep',dur:30,face:'-y',seat:{z:.9,live:1,sp:S(.8,.2)}}]},
+   {c:JOHN_HOODIE,plan:[{at:[7.8,6.6],do:'talk',dur:4,face:'-x'},{walk:[5,7.8]},{walk:[2.2,6.8]},{walk:[1.6,4.2]},{do:'point',dur:3,face:'-x'},{walk:[2.2,6.8]},{walk:[5,7.8]},{walk:[7.8,6.6]},{do:'drink',dur:4.5,face:'-y',prop:'mug',stand:1}]}]},
+/* VIII --------------------------------------------------------------- */
+{n:'VIII',title:'Freelance',accent:2,
+ quote:'Designed and developed end-to-end solutions independently, from requirements gathering to deployment.',
+ meta:['Freelance Developer · Remote · 2025–present','React · JavaScript · Express · MongoDB · Flutter · Figma · PHP · MySQL · IoT hardware and software'],links:[],
+ build(p){const r=mulberry(88);
+  shell(p,{panel:S(0,0,.1,.04),wallL:S(.1,.1),wallR:S(.14,.02,.02),floor:S(.35,.1,0,.05),planks:1,seed:16});
+  windowW(p,'L',1.4,2.2,3,2.6,'sunset');
+  wallShelf(p,'L',5.6,4,3,r);wallShelf(p,'L',5.6,2.9,3,r,TONE.wood,false);
+  for(let i=0;i<3;i++)box(p,.1,5.8+i*.9,2.98,.4,.6,.4,[S(0,.7),S(.8),S(0,0,.7)][i]);
+  // wireframe board
+  const Pb=surf(WR,6.6,1.9,2.8,2.6);p.fill(mapPts(Pb,rect(0,0,1,1)),S(.03,0,0,0,{ol:1.1}));
+  for(let i=0;i<3;i++){p.outline(mapPts(Pb,rect(.06+i*.31,.08,.26,.5)),.8);p.fill(mapPts(Pb,rect(.09+i*.31,.12,.2,.1)),S(0,0,.4,0,{ol:0,ko:false}));for(let j=0;j<3;j++)p.line(mapPts(Pb,[[.09+i*.31,.3+j*.08],[.26+i*.31,.3+j*.08]]),.6,3,{d:.5});}
+  for(let i=0;i<5;i++)p.fill(mapPts(Pb,rect(.08+i*.17,.7,.13,.18)),Object.assign({},[S(.9),S(.8,.4),S(0,.8),S(0,0,.8),S(0,0,0,.8)][i],{ol:.5}));
+  // desk: monitor with a wireframe, laptop on a video call, a small board of LEDs
+  desk(p,2.8,.3,3.6,1.4,1.5,S(0,0,0,.2),{leg:TONE.metal});
+  monitor(p,3,.4,1.5,1.6,.9,'+y',(p,M)=>{p.fill(mapPts(M,rect(.05,.08,.9,.14)),S(0,.6,0,0,{ol:0}));for(let i=0;i<3;i++)p.fill(mapPts(M,rect(.06+i*.31,.32,.26,.5)),S(.05,0,0,0,{ol:0}));});
+  laptop(p,4.9,.6,1.5,'+y',(p,M)=>{p.fill(mapPts(M,rect(0,0,1,1)),S(.3,.15,0,.1,{ol:0}));p.fill(mapPts(M,ellipse(.5,.45,.12,.16,12)),S(.25,.2,0,.1,{ol:.5}));p.fill(mapPts(M,[[.25,1],[.3,.7],[.7,.7],[.75,1]]),S(0,0,.6,.1,{ol:.5}));p.fill(mapPts(M,rect(.72,.06,.24,.28)),S(0,0,.4,.5,{ol:.4}));});
+  box(p,5.9,.5,1.5,.4,.5,.06,S(0,0,.7,.1));for(let i=0;i<3;i++)p.fill(isoEl(6,.6+i*.14,1.57,.04,8),S(0,.9,0,0,{ol:0}));
+  mugMotif(p,6.1,1.35,1.5);
+  box(p,3.1,1.1,1.5,.9,.3,.03,S(0,0,0,.9));
+  rug(p,2.6,3.6,4,4,S(.6,0,.4,.1),S(0,0,0,.2));
+  plant(p,.9,8.8,0,1.5);plant(p,8.9,.9,0,1.1);
+  // server box with lights under the desk
+  box(p,2.9,.4,0,.6,.9,1.1,S(0,0,0,.8));for(let i=0;i<3;i++)p.fill(isoEl(3.5,.6+i*.2,.8,.035,6),S(.9,0,.2,0,{ol:0}));
+ },
+ figs:[{c:JOHN,plan:[{at:[4.3,2.4],do:'type',dur:8,face:'-y',seat:{z:.9,live:1,sp:S(0,0,0,.75)}},{walk:[6.2,2.8]},{walk:[7.8,1.6]},{do:'board',dur:4,face:'-y'},{walk:[6.2,2.8]},{walk:[4.3,2.4]}]}]},
+/* IX ----------------------------------------------------------------- */
+{n:'IX',title:'PokéClash',accent:1,
+ quote:'An API-based Pokémon stat battle simulator, emphasizing data fetching, handling, and dynamic content rendering. I designed it with a retro theme inspired by classic Pokémon games.',
+ meta:['ReactJS · Tailwind CSS · REST API · json-server · 2025'],links:[['Live site','https://pokeclash1.netlify.app/'],['GitHub','https://github.com/yoyodevc/pokeclash']],
+ build(p){const r=mulberry(99);
+  shell(p,{panel:S(.3,0,.05),wallL:S(.3,0,.06),wallR:S(0,.22,.05),floor:S(.04,.02),tiles:S(0,.7,0,0),seed:18});
+  // pixel poster with a pixel mug
+  const Px=surf(WL,1.2,2.6,2,2);p.fill(mapPts(Px,rect(-.05,-.05,1.1,1.1)),S(0,0,0,.8));
+  const MUG=['..........','.XXXXXX...','.XRRRRX...','.XXXXXXXX.','.XXXXXX.X.','.XXXXXXXX.','.XXXXXX...','..XXXX....'];
+  MUG.forEach((row,j)=>[...row].forEach((c,i)=>{if(c!=='.')p.fill(mapPts(Px,rect(.05+i*.09,.1+j*.1,.09,.1)),S(0,c==='R'?.9:0,c==='X'?.8:0,0,{ol:0}));}));
+  // shelf of cartridges
+  wallShelf(p,'L',4,4.3,3.2,r,TONE.wood,false);for(let i=0;i<10;i++)box(p,.1,4.2+i*.28,4.38,.35,.2,.35,[S(0,.8),S(.8),S(0,0,.8),S(0,0,0,.7)][i%4],{lw:.6});
+  // arcade cabinet
+  box(p,.3,7.4,0,1.2,1.4,3,S(0,.6,0,.5));box(p,1.5,7.5,1.3,.4,1.2,.15,S(0,0,0,.8));
+  const Ac=(s,t)=>iso(1.505,7.6+s*1,2.8-t*.9);p.fill(mapPts(Ac,rect(0,0,1,1)),S(0,0,.5,.6,{ol:.8}));p.fill(mapPts(Ac,ellipse(.5,.5,.14,.2,10)),S(.9,0,0,0,{ol:0}));
+  // CRT on a cabinet with the battle on screen
+  box(p,3,.3,0,2.6,1.2,1,TONE.woodD);box(p,3.3,.4,1,2,1.1,1.5,S(.1,.1,0,.35));
+  const Sc=(s,t)=>iso(3.45+s*1.7,1.501,2.35-t*1.2);p.fill(mapPts(Sc,rect(0,0,1,1)),S(.1,0,.2,0,{ol:1}));
+  p.fill(mapPts(Sc,rect(0,.6,1,.4)),S(.55,0,.5,0,{ol:0,ko:false}));
+  p.fill(mapPts(Sc,ellipse(.28,.72,.16,.05,12)),S(.4,0,.5,.2,{ol:0,ko:false}));p.fill(mapPts(Sc,ellipse(.72,.45,.16,.05,12)),S(.4,0,.5,.2,{ol:0,ko:false}));
+  const pix=(ox,oy,rows,col)=>rows.forEach((row,j)=>[...row].forEach((c,i)=>{if(c!=='.')p.fill(mapPts(Sc,rect(ox+i*.035,oy+j*.05,.035,.05)),c==='o'?S(0,0,0,1,{ol:0}):Object.assign({},col,{ol:0}));}));
+  pix(.18,.42,['..XX..','.XXXX.','XXoXXX','XXXXXX','.X..X.'],S(0,.9));
+  pix(.62,.16,['.XXX..','XXXXX.','XoXXXX','XXXXXX','X.XX.X'],S(0,0,.85));
+  p.fill(mapPts(Sc,rect(.05,.08,.35,.05)),S(.85,0,0,0,{ol:.4}));p.fill(mapPts(Sc,rect(.58,.82,.35,.05)),S(0,.85,0,0,{ol:.4}));
+  box(p,5.8,.6,0,.6,.5,.3,S(0,0,0,.2));
+  // floor clutter
+  box(p,6.4,3,0,.8,.5,.1,S(0,0,0,.7));mugMotif(p,7.4,2.6,0,1.2);
+ },
+ figs:[{c:JOHN_HOODIE,plan:[{at:[3.6,4.1],do:'game',dur:9,face:'-y',seat:{z:.45,bean:S(0,0,.7,.2)},prop:'ctrl'},{do:'cheer',dur:2,face:'+y'}]},
+   {c:STU[3],plan:[{at:[5.6,4.4],do:'game',dur:30,face:'-y',seat:{z:.45,bean:S(.8,.1)},prop:'ctrl'}],ph:.3}]},
+/* X ------------------------------------------------------------------ */
+{n:'X',title:'To-do List',accent:3,
+ quote:'A secure cross-platform to-do app built for users who value privacy and control. All tasks, categories, and personal data are stored locally on-device using IndexedDB, with no cloud syncing, tracking, or external data collection.',
+ meta:['React · TypeScript · Tailwind CSS · shadcn/ui · LocalStorage · 2026'],links:[['Live site','https://jfl-newtodo.netlify.app/'],['GitHub','https://github.com/yoyodevc/New-ToDo']],
+ build(p){const r=mulberry(1010);
+  shell(p,{panel:S(0,.1,.1),wallL:S(0,0,.12),wallR:S(.14,.04),floor:S(.3,.2,0,.1),planks:1,seed:20});
+  // cork board with checklist cards
+  const K=surf(WR,1,1.9,5,2.8);p.fill(mapPts(K,rect(-.02,-.03,1.04,1.06)),S(.3,.2,0,.3));p.fill(mapPts(K,rect(0,0,1,1)),S(.5,.3,0,.1,{ol:1}));
+  for(let c=0;c<3;c++)for(let i=0;i<3;i++){const x=.04+c*.33,y=.06+i*.31,done=(c*3+i)%3!==2&&c<2;
+    p.fill(mapPts(K,rect(x,y,.28,.25)),S(.03,0,0,0,{ol:.6}));
+    for(let j=0;j<2;j++){p.outline(mapPts(K,rect(x+.03,y+.05+j*.1,.04,.06)),.6);p.line(mapPts(K,[[x+.1,y+.08+j*.1],[x+.24,y+.08+j*.1]]),.7,3,{d:.6});
+      if(done||j===0)p.line(mapPts(K,[[x+.025,y+.08+j*.1],[x+.045,y+.11+j*.1],[x+.08,y+.03+j*.1]]),1,1);}
+    p.fill(mapPts(K,ellipse(x+.14,y+.01,.012,.02,6)),S(0,.9,0,0,{ol:0}));
+    if(c===2&&i===0)mug2D(p,K,x+.2,y+.17,.04,S(0,0,.7));}
+  // vault door: nothing leaves this room
+  const V=surf(WL,5.2,1.2,3.6,3.6),vc=[];for(let i=0;i<28;i++){const a=i/28*TAU;vc.push(V(.5+Math.cos(a)*.5,.5+Math.sin(a)*.5));}
+  p.fill(vc,S(0,0,.35,.4,{ol:1.4}));const vi=vc.map(([x,y],i)=>{const c=V(.5,.5);return[c[0]+(x-c[0])*.78,c[1]+(y-c[1])*.78];});p.fill(vi,S(0,0,.25,.3,{ol:1}));
+  for(let i=0;i<6;i++){const a=i/6*TAU;p.line([V(.5,.5),V(.5+Math.cos(a)*.3,.5+Math.sin(a)*.3)],2.2,3);}
+  p.fill(mapPts(V,ellipse(.5,.5,.07,.07,12)),S(.8,.2,0,.2));
+  for(let i=0;i<8;i++){const a=i/8*TAU;p.fill(mapPts(V,ellipse(.5+Math.cos(a)*.44,.5+Math.sin(a)*.44,.02,.02,6)),S(0,0,0,.6,{ol:0}));}
+  // calendar grid
+  const Cl=surf(WL,1.2,2.8,2.2,1.8);p.fill(mapPts(Cl,rect(0,0,1,1)),S(.03,0,0,0,{ol:1}));p.fill(mapPts(Cl,rect(0,0,1,.18)),S(0,.8,0,0,{ol:.6}));
+  for(let i=0;i<5;i++)for(let j=0;j<4;j++){const x=.04+i*.19,y=.24+j*.19;p.outline(mapPts(Cl,rect(x,y,.15,.15)),.5);if(i+j*5<11)p.line(mapPts(Cl,[[x+.02,y+.02],[x+.13,y+.13]]),.8,1);}
+  // desk with phone and laptop
+  desk(p,6.2,.3,2.8,1.3,1.5,TONE.wood);laptop(p,6.6,.5,1.5,'+y',(p,M)=>{for(let j=0;j<5;j++){p.outline(mapPts(M,rect(.1,.12+j*.16,.06,.1)),.6,-1);p.line(mapPts(M,[[.22,.17+j*.16],[.8,.17+j*.16]]),.8,-1);}});
+  box(p,7.7,.9,1.5,.25,.45,.04,S(0,0,.5,.6));deskLamp(p,8.5,.5,1.5);mugMotif(p,8,1.3,1.5);
+  rug(p,3.2,4.2,3.8,3.4,S(0,0,.55),S(0,.6));
+  plant(p,.9,1.1,0,1.2);plant(p,1,8.8,0,1.4);
+ },
+ figs:[{c:JOHN,plan:[{at:[3,2.2],do:'board',dur:4,face:'-y',prop:'chalk'},{walk:[4.8,2.6]},{do:'think',dur:2.5,face:'-y'},{walk:[6.2,3.4]},{walk:[7.4,2.4]},{do:'type',dur:6,face:'-y',seat:{z:.9,live:1,sp:S(.8,.3)}},{walk:[5.4,3.6]},{walk:[3,2.2]}]}]},
+/* XI ----------------------------------------------------------------- */
+{n:'XI',title:'Calculator',accent:2,
+ quote:'A privacy-first calculator that keeps every calculation and history entry stored locally on your device. Nothing is uploaded, tracked, or shared.',
+ meta:['React · TypeScript · Tailwind CSS · LocalStorage · 2026'],links:[['Live site','https://jlf-calculator-wip.netlify.app/'],['GitHub','https://github.com/yoyodevc/Calculator']],
+ build(p){const r=mulberry(1111);
+  shell(p,{panel:S(.14,.14),wallL:S(.08,.1),wallR:S(0,0,.2),floor:S(.02,.02),tiles:S(0,0,.18),seed:22});
+  // glass panes overprinting each other on the left wall
+  p.fill(wq(WL,1,2.6,2.6,2.2),S(0,0,.35,0,{ko:false,ol:1}));p.fill(wq(WL,2.2,1.8,2.6,2.2),S(0,.35,0,0,{ko:false,ol:1}));p.fill(wq(WL,3.6,3.2,2,1.6),S(.4,0,0,0,{ko:false,ol:1}));
+  for(let i=0;i<3;i++)p.line([WL(1.3+i*.3,4.6),WL(1.6+i*.3,4.3)],1.2,-1);
+  frame(p,'L',6.6,2.8,2.2,1.9,(p,M)=>{p.outline(mapPts(M,[[.1,.9],[.5,.1],[.9,.9]]),1);p.outline(mapPts(M,ellipse(.5,.62,.26,.26,20)),1);p.line(mapPts(M,[[.1,.62],[.9,.62]]),.7);},S(0,0,0,.7));
+  // the giant calculator
+  const cx=2,cy=.3,cw=4,cd=.9,chh=4.4;box(p,cx,cy,0,cw,cd,chh,S(0,0,.25,.25));
+  const F=(s,t)=>iso(cx+.25+s*(cw-.5),cy+cd+.001,chh-.25-t*(chh-.5));
+  p.fill(mapPts(F,rect(0,0,1,.2)),S(.2,0,.35,.6,{ol:1}));
+  for(let i=0;i<6;i++){const h=.2+((i*37)%5)*.12;p.fill(mapPts(F,rect(.08+i*.14,.16-h*.1,.09,h*.1)),S(.9,0,.2,0,{ol:0}));}
+  for(let j=0;j<4;j++)for(let i=0;i<4;i++){const op=i===3,eq=op&&j===3;
+    p.fill(mapPts(F,rect(.04+i*.245,.26+j*.18,.2,.14)),eq?S(0,.85,0,0):op?S(.85,.1,0,0):S(.06,.02,0,0));
+    p.fill(mapPts(F,rect(.04+i*.245,.38+j*.18,.2,.02)),S(0,0,0,.4,{ol:0,ko:false}));}
+  // receipt tape unrolling across the floor
+  cyl(p,6.8,1.2,0,.35,.4,S(.03,0,0,0,{ol:1}));
+  const tape=[];for(let i=0;i<=16;i++){const t=i/16;tape.push([6.8+t*2.2,1.6+t*3+Math.sin(t*6)*.3]);}
+  const tp=tape.map(([x,y])=>iso(x,y,.01)),tq=tape.map(([x,y])=>iso(x+.45,y-.1,.01)).reverse();p.fill(tp.concat(tq),S(.02,0,0,0,{ol:.8}));
+  for(let i=1;i<16;i+=2){const [x,y]=tape[i];p.line([iso(x+.08,y,.02),iso(x+.35,y-.05,.02)],.6,3,{d:.5});}
+  // table with an abacus and the mug
+  desk(p,.8,6.4,1.4,2.4,1.4,TONE.woodL);
+  box(p,1,6.8,1.4,.1,1.4,.7,TONE.woodD);box(p,1.8,6.8,1.4,.1,1.4,.7,TONE.woodD);
+  for(let j=0;j<4;j++){p.line([iso(1.05,6.85+j*.4,1.6),iso(1.85,6.85+j*.4,1.6)],.7);for(let i=0;i<4;i++){const q=iso(1.2+i*.12+(j%2)*.25,6.85+j*.4,1.6);p.fill(ellipse(q[0],q[1],4,4,8),[S(0,.8),S(.85),S(0,0,.8)][(i+j)%3]);}}
+  mugMotif(p,1.5,8.4,1.4);
+ },
+ figs:[{c:JOHN_POLO,plan:[{at:[3.4,2.2],do:'press',dur:4,face:'-y'},{walk:[5.2,2.3]},{do:'press',dur:3,face:'-y'},{walk:[7.6,4.4]},{do:'hold',dur:4,face:'+y',prop:'paper'},{walk:[3.4,2.2]}]}]},
+/* XII ---------------------------------------------------------------- */
+{n:'XII',title:'Let’s Work Together',accent:1,
+ quote:'I’m open to full-time roles, freelance projects, and interesting collaborations. If you have something worth building, I’d like to hear about it.',
+ meta:['Open to full-time roles and freelance work'],links:[['GitHub','https://github.com/yoyodevc'],['LinkedIn','https://www.linkedin.com/in/johnfredricklim/']],
+ build(p){const r=mulberry(1212);
+  shell(p,{panel:S(0,0,.12,.02),wallL:S(.15,.12),wallR:S(0,.05,.15),floor:S(.2,.1,0,.08),tiles:S(.15,.1,0,.1),seed:24});
+  // pigeonholes full of letters; one stamp shows the mug
+  const Ph=surf(WR,.6,.6,5,3.8);box(p,.5,0,0,5.2,.8,4.5,TONE.woodD);
+  const Fr=(s,t)=>iso(.6+s*5,.801,4.4-t*4.2);
+  for(let j=0;j<5;j++)for(let i=0;i<6;i++){const cell=rect(.02+i*.163,.03+j*.195,.145,.17);p.fill(mapPts(Fr,cell),S(.3,.3,0,.6,{ol:.6}));
+    const n=Math.floor(r()*3);for(let k=0;k<n;k++){const x=.035+i*.163+k*.025,y=.09+j*.195+k*.01;p.fill(mapPts(Fr,rect(x,y,.1,.1)),Object.assign({},[S(.04),S(.1,.05),S(0,0,.2)][k],{ol:.5}));
+      if(i===4&&j===1&&k===0)mug2D(p,Fr,x+.07,y+.04,.018,S(0,.85));}}
+  // the door, open to the street and the sea light
+  const D=surf(WL,4.4,0,2,3.8);p.fill(mapPts(D,rect(0,0,1,1)),S(.2,.08,0,0,{ol:1.2}));rings(p,f=>mapPts(D,ellipse(.5,.9,.6*f,.5*f,20)),4,0,.7);
+  floorRings(p,1.2,5.4,0,1.3,4,0,.45,1);
+  frame(p,'L',1,2.4,2.4,1.8,(p,M)=>{VIEWS.sea(p,M);});
+  // red mailbox on a post, parcels, flying envelopes
+  box(p,7.2,6.6,0,.2,.2,1.3,S(0,0,0,.8));box(p,6.9,6.3,1.3,.8,.8,.9,S(0,.85,0,.1));p.fill(fq(6.95,6.35,.7,.7,2.21),S(0,.8,0,.2));p.line([iso(7.7,6.6,1.9),iso(7.7,7,1.9)],2,-1);
+  for(let i=0;i<3;i++)box(p,8.2+i*.2,1.6+i*.9,0,.9-i*.1,.8,.6+i*.1,S(.45,.3,0,.1));box(p,8.3,1.7,.6,.7,.7,.5,S(.45,.3,0,.15));
+  for(let i=0;i<4;i++){const q=iso(3+i*1.3,5+Math.sin(i)*1.4,3+i*.4),a=(i-1.5)*.3;
+    p.fill([[q[0]-14,q[1]-9],[q[0]+14,q[1]-9],[q[0]+14,q[1]+9],[q[0]-14,q[1]+9]].map(([x,y])=>{const dx=x-q[0],dy=y-q[1];return[q[0]+dx*Math.cos(a)-dy*Math.sin(a),q[1]+dx*Math.sin(a)+dy*Math.cos(a)];}),S(.05,.02,0,0,{ol:.8}));
+    p.line([[q[0]-12,q[1]-7],[q[0],q[1]+1],[q[0]+12,q[1]-7]].map(([x,y])=>{const dx=x-q[0],dy=y-q[1];return[q[0]+dx*Math.cos(a)-dy*Math.sin(a),q[1]+dx*Math.sin(a)+dy*Math.cos(a)];}),.7);}
+  mugMotif(p,5.3,.5,4.5,1,true);
+ },
+ figs:[{c:JOHN,plan:[{at:[4.6,6.4],do:'wave',dur:3,face:'+y',prop:'letter'},{walk:[7.3,7.8]},{do:'press',dur:2.5,face:'-y',prop:'letter'},{walk:[4.6,6.4]}]},
+   {c:CLERK,plan:[{at:[2.6,2],do:'feed',dur:4,face:'-y'},{walk:[6.4,2.6],clip:'walk',prop:'box'},{walk:[7.6,3.6],prop:'box'},{do:'stand',dur:2,face:'+x',prop:'box'},{walk:[2.6,2]}]}]},
+];
+/* =====================================================================
+   8. Figures on the move: plans are loops of walks and actions
+   ===================================================================== */
+const FACE={'+x':1,'-y':1,'-x':-1,'+y':-1},FIGSC=1.15;
+function compilePlan(F,id){
+  let pos=null,t=0;const steps=[],sp=F.speed||1.1;
+  for(const s of F.plan){
+    if(s.at)pos=s.at.slice();
+    if(s.walk){const d=Math.hypot(s.walk[0]-pos[0],s.walk[1]-pos[1]);if(d<.01)continue;steps.push({w:1,from:pos,to:s.walk.slice(),t0:t,dur:d/sp,prop:s.prop,clip:s.clip||'walk'});pos=s.walk.slice();t+=d/sp;}
+    else if(s.do){steps.push({pos:pos.slice(),t0:t,dur:s.dur,clip:s.do,face:s.face,seat:s.seat,prop:s.prop,stand:s.stand});t+=s.dur;}
+  }
+  F.steps=steps;F.total=t;F.id=id;F.speed=sp;
+}
+function figAt(F,time){
+  const tt=(((time+(F.ph||0)*F.total)%F.total)+F.total)%F.total;
+  let st=F.steps[F.steps.length-1];for(const s of F.steps)if(tt>=s.t0&&tt<s.t0+s.dur){st=s;break;}
+  const lt=tt-st.t0;
+  if(st.w){const e=clamp(lt/st.dur,0,1),x=lerp(st.from[0],st.to[0],e),y=lerp(st.from[1],st.to[1],e);
+    const dxs=(st.to[0]-st.from[0])-(st.to[1]-st.from[1]);
+    return{x,y,f:dxs>=0?1:-1,q:pose(st.clip,lt*F.speed/1.35),st,t:lt};}
+  const q=pose(st.clip,lt+F.id*.37);
+  if(st.stand){Object.assign(q,{thN:POSE0.thN,knN:POSE0.knN,thF:POSE0.thF,knF:POSE0.knF,sp:0,hip:0});}
+  if(st.seat)q.hip=st.seat.z*U/FIGSC+4;
+  return{x:st.pos[0],y:st.pos[1],f:FACE[st.face]||1,q,st,t:lt};
+}
+function drawFig(p,F,time){
+  const s=figAt(F,time),[X,Y]=iso(s.x,s.y,0);
+  if(F.kind==='chick'){drawChick(p,X,Y,s.f,s.st.w?s.t:0,1);return;}
+  const seat=s.st.seat,dir=s.st.face;
+  const pre=(p)=>{if(!seat)return;
+    if(seat.bean){p.fill(ellipse(X-8*s.f,Y-14,46,24,20),Object.assign({},seat.bean,{ol:1}));p.line([[X-40*s.f,Y-18],[X+10*s.f,Y-6]],.8);}
+    else if(seat.live)chairPart(p,s.x,s.y,dir,seat.sp,(dir==='+x'||dir==='+y')?'all':'seat');};
+  pre(p);
+  const prop=s.st.prop?PROPS[s.st.prop]:null;
+  drawFigure(p,F.c,s.q,X,Y,s.f,FIGSC,{post:(p,M,J,l)=>{if(prop&&l)prop(p,M,J);}});
+  if(seat&&seat.live&&(dir==='-x'||dir==='-y'))chairPart(p,s.x,s.y,dir,seat.sp,'back');
+}
+function chairPart(p,cx,cy,dir,sp,part){
+  const s=.8,h=.9,x=cx-.4,y=cy-.4;
+  if(part!=='back'){for(const [a,b] of [[0,0],[s-.08,0],[0,s-.08],[s-.08,s-.08]])box(p,x+a,y+b,0,.08,.08,h-.08,dk(sp,.2),{lw:.6});box(p,x,y,h-.08,s,s,.1,sp);}
+  if(part!=='seat'){if(dir==='+x')box(p,x-.05,y,h,.1,s,.9,sp);else if(dir==='+y')box(p,x,y-.05,h,s,.1,.9,sp);else if(dir==='-x')box(p,x+s-.05,y,h,.1,s,.9,sp);else box(p,x,y+s-.05,h,s,.1,.9,sp);}
+}
+
+/* =====================================================================
+   9. The printed sheet: layout, crop marks, targets, swatches
+   ===================================================================== */
+const MARG=320;let COLS=4,ROWS=3,SW=0,SH=0,CHROME=[];
+function layout(){
+  const a=innerWidth/innerHeight;[COLS,ROWS]=a<.72?[2,6]:a<1.12?[3,4]:[4,3];
+  SW=COLS*CW+2*MARG;SH=ROWS*CH+2*MARG;
+  ROOMS.forEach((r,i)=>{r.x=MARG+(i%COLS)*CW;r.y=MARG+Math.floor(i/COLS)*CH;});
+  const p=new Rec(),bx=MARG,by=MARG,bw=COLS*CW,bh=ROWS*CH;
+  const reg=(fn)=>{for(let i=0;i<4;i++)fn(i);};
+  // crop marks in registration (all four plates)
+  for(const [cx,cy,sx,sy] of [[bx,by,-1,-1],[bx+bw,by,1,-1],[bx,by+bh,-1,1],[bx+bw,by+bh,1,1]])
+    reg(i=>{p.line([[cx+sx*40,cy],[cx+sx*170,cy]],2,i,{j:.2,ov:0,flat:1});p.line([[cx,cy+sy*40],[cx,cy+sy*170]],2,i,{j:.2,ov:0,flat:1});});
+  // crosshair targets at the middle of each edge
+  const target=(x,y)=>reg(i=>{p.outline(ellipse(x,y,46,46,28),2.2,i,{j:.1});p.outline(ellipse(x,y,22,22,20),2,i,{j:.1});
+    p.line([[x-80,y],[x+80,y]],2,i,{j:.1,flat:1,ov:0});p.line([[x,y-80],[x,y+80]],2,i,{j:.1,flat:1,ov:0});});
+  target(bx+bw/2,by/2);target(bx+bw/2,by+bh+MARG/2);target(bx/2,by+bh/2);target(bx+bw+MARG/2,by+bh/2);
+  // ink swatch strip: every plate in steps, then the overprints
+  const sw=Math.min(78,(bw*.42)/18),y0=by+bh+MARG/2-sw/2;let x=bx;
+  for(let i=0;i<4;i++){for(const d of [1,.7,.4,.15]){const sp={ko:true,ol:0};sp[KEYS[i]]=d;p.fill(rect(x,y0,sw,sw),sp);x+=sw;}x+=sw*.4;}
+  x=bx+bw-sw*7;
+  for(const combo of [['Y','R'],['Y','T'],['R','T'],['R','N'],['T','N'],['Y','R','T']]){const sp={ko:true,ol:0};combo.forEach(k=>sp[k]=.9);p.fill(rect(x,y0,sw,sw),sp);x+=sw;}
+  // colour bar along the top
+  for(let j=0;j<24;j++){const sp={ko:true,ol:0};sp[KEYS[j%4]]=[1,.5,.25][Math.floor(j/4)%3];p.fill(rect(bx+j*sw*.5,by/2-sw*.25,sw*.5,sw*.5),sp);}
+  // the block's frame and gutters
+  p.outline(rect(bx,by,bw,bh),2.4,3,{j:.3});
+  for(let c=1;c<COLS;c++)p.line([[bx+c*CW,by],[bx+c*CW,by+bh]],1.4,3,{j:.3,flat:1});
+  for(let r=1;r<ROWS;r++)p.line([[bx,by+r*CH],[bx+bw,by+r*CH]],1.4,3,{j:.3,flat:1});
+  CHROME=p.ops;
+}
+
+/* =====================================================================
+   10. Baking: each room is replayed through the pen into three boil
+   variants per level of detail, a slice of work per frame.
+   ===================================================================== */
+const Q=[];let job=null;const LRU=[];
+const SMALL=Math.min(screen.width,screen.height)<700,RM=matchMedia('(prefers-reduced-motion: reduce)').matches,BOILHZ=RM?1:3;
+function recordRooms(){ROOMS.forEach((r,i)=>{const p=new Rec();r.build(p);r.ops=p.ops;r.bk=[];r.i=i;r.figs.forEach((f,j)=>compilePlan(f,i*10+j));});}
+function want(r,k,v,front){if(r.bk[k]&&r.bk[k][v])return;if(Q.some(j=>j.r===r&&j.k===k&&j.v===v))return;if(job&&job.r===r&&job.k===k&&job.v===v)return;const j={r,k,v};front?Q.unshift(j):Q.push(j);}
+function stepBake(budget){
+  const end=performance.now()+budget;let done=false;
+  while(performance.now()<end){
+    if(!job){const j=Q.shift();if(!j)break;const s=j.k*R1,cv=mkCanvas(CW*s,CH*s),c=cv.getContext('2d');
+      const pen=new Pen(c,s,j.k,j.v,0,0),pa=new Path2D();pa.rect(0,0,cv.width,cv.height);pen.paper(pa,'nonzero');job=Object.assign(j,{cv,c,pen,i:0});}
+    const ops=job.r.ops;
+    while(job.i<ops.length&&performance.now()<end)play(ops[job.i++],job.pen);
+    if(job.i>=ops.length){
+      const c=job.c;MOTTLE=MOTTLE||mottleTile();MOTTLE.setTransform(new DOMMatrix([7*job.k,0,0,7*job.k,0,0]));c.fillStyle=MOTTLE;c.fillRect(0,0,job.cv.width,job.cv.height);
+      const r=job.r;(r.bk[job.k]=r.bk[job.k]||[])[job.v]=job.cv;if(job.k===1&&job.v===0)r.ready=r.ready||now();
+      if(job.k>1){const key=r.i+':'+job.k,ix=LRU.indexOf(key);if(ix>=0)LRU.splice(ix,1);LRU.push(key);
+        while(LRU.length>(SMALL?2:3)){const [ri,k]=LRU.shift().split(':').map(Number);if(ROOMS[ri].bk[k]){ROOMS[ri].bk[k]=null;}}}
+      job=null;done=true;
+    }
+  }
+  return done;
+}
+function pickBake(r,k,v){
+  for(let d=0;d<KMAX;d++)for(const kk of [k-d,k+d]){const b=r.bk[kk];if(b){if(b[v])return b[v];for(const c of b)if(c)return c;}}
+  return null;
+}
+
+/* =====================================================================
+   11. Camera, tour, input
+   ===================================================================== */
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let DPR=1,VW=0,VH=0;const cam={x:0,y:0,z:.2};let fly=null,vel={x:0,y:0},lastInput=-1e9,dirty=true;
+const now=()=>performance.now()/1000;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);VW=innerWidth;VH=innerHeight;cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);
+  const oc=COLS;layout();if(oc!==COLS&&settled>=0)focusRoom(settled,true);dirty=true;}
+const fitSheetZ=()=>Math.min(VW/(SW*1.02),VH/(SH*1.02));
+const zMin=()=>fitSheetZ()*.6,zMax=()=>KMAX*R1*1.3/DPR;
+function roomView(i){
+  const r=ROOMS[i],portrait=VW<700;let z,cx=r.x+CW/2,cy=r.y+CH/2;
+  if(portrait){z=Math.min(VW*.98/CW,VH*.55/CH);cy+=VH*.2/z;}
+  else{z=Math.min(VW*.9/CW,VH*.94/CH);const cardW=Math.min(400,VW*.34);if(VW-CW*z<cardW*2+40)cx-=Math.min(cardW*.55,(VW-CW*z)/2+cardW*.5-20)/z;}
+  return{x:cx,y:cy,z};
+}
+function flyTo(v,dur,done){const d=Math.hypot(v.x-cam.x,v.y-cam.y)*Math.min(cam.z,v.z)/Math.min(VW,VH);
+  fly={x0:cam.x,y0:cam.y,z0:cam.z,x1:v.x,y1:v.y,z1:v.z,t0:now(),dur:(dur??clamp(1.4+Math.log(1+d)*.7,1.2,3.2))*(RM?.7:1),bump:RM?0:clamp(Math.log(1+d)*.55,0,1.3),done};hideCard();}
+function focusRoom(i,instant){const v=roomView(i);if(instant){Object.assign(cam,{x:v.x,y:v.y,z:v.z});return;}flyTo(v,null,()=>{settle(i);});}
+function stepFly(){if(!fly)return;const t=clamp((now()-fly.t0)/fly.dur,0,1),e=ease(t),ep=ease(clamp(t*1.12,0,1));
+  cam.z=Math.exp(lerp(Math.log(fly.z0),Math.log(fly.z1),e)-fly.bump*Math.sin(Math.PI*e));cam.x=lerp(fly.x0,fly.x1,ep);cam.y=lerp(fly.y0,fly.y1,ep);dirty=true;
+  if(t>=1){const d=fly.done;fly=null;if(d)d();}}
+function zoomAt(px,py,f){const wx=cam.x+(px-VW/2)/cam.z,wy=cam.y+(py-VH/2)/cam.z;cam.z=clamp(cam.z*f,zMin(),zMax());cam.x=wx-(px-VW/2)/cam.z;cam.y=wy-(py-VH/2)/cam.z;clampCam();dirty=true;}
+function clampCam(){cam.x=clamp(cam.x,0,SW);cam.y=clamp(cam.y,0,SH);}
+function roomAt(px,py){const wx=cam.x+(px-VW/2)/cam.z,wy=cam.y+(py-VH/2)/cam.z;return ROOMS.findIndex(r=>wx>=r.x&&wx<r.x+CW&&wy>=r.y&&wy<r.y+CH);}
+
+// tour
+const TOUR={i:-1,holdUntil:0,paused:false,started:false};let T0=0,settled=-1,manualSettleAt=0;
+function tourNext(){const n=TOUR.i+1;
+  if(n>=ROOMS.length){TOUR.i=-1;flyTo({x:SW/2,y:SH/2,z:fitSheetZ()},2.4,()=>{TOUR.holdUntil=now()+4;});return;}
+  TOUR.i=n;prebake(n);flyTo(roomView(n),null,()=>{settle(n);TOUR.holdUntil=now()+9;if(n+1<ROOMS.length)prebake(n+1);});}
+function prebake(i){const v=roomView(i),k=clamp(Math.ceil(v.z*DPR/R1-.25),1,KMAX);if(k>1)for(let j=0;j<3;j++)want(ROOMS[i],k,j,j===0);}
+function userInput(move=true){lastInput=now();TOUR.paused=true;if(move){if(fly&&!fly.user)fly=null;hideCard();manualSettleAt=0;}}
+function stepTour(){
+  const t=now();
+  if(!TOUR.started&&!TOUR.paused){if(t-T0>4.6&&ROOMS.every(r=>r.ready)){TOUR.started=true;tourNext();}return;}
+  if(TOUR.paused){if(t-lastInput>9&&!ptrs.size&&!fly){TOUR.paused=false;TOUR.started=true;
+      const c=settled>=0?settled:roomAt(VW/2,VH/2);TOUR.i=c>=0?c:TOUR.i;tourNext();}
+    return;}
+  if(!fly&&TOUR.holdUntil&&t>TOUR.holdUntil){TOUR.holdUntil=0;tourNext();}
+}
+
+// input
+const ptrs=new Map();let pinch=null;
+cv.addEventListener('pointerdown',e=>{userInput();ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});cv.setPointerCapture(e.pointerId);vel={x:0,y:0};fly=null;cv.style.cursor='grabbing';
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),mx:(a.x+b.x)/2,my:(a.y+b.y)/2};}});
+cv.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;userInput();
+  if(ptrs.size===1){cam.x-=dx/cam.z;cam.y-=dy/cam.z;vel.x=lerp(vel.x,-dx/cam.z*60,.5);vel.y=lerp(vel.y,-dy/cam.z*60,.5);clampCam();dirty=true;}
+  else if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    cam.x-=(mx-pinch.mx)/cam.z;cam.y-=(my-pinch.my)/cam.z;zoomAt(mx,my,d/pinch.d);pinch={d,mx,my};}});
+const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size)cv.style.cursor='grab';lastInput=now();};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();userInput();fly=null;const k=e.deltaMode===1?.05:e.deltaMode===2?1:.0016;zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*k*(e.ctrlKey?2.2:1)));},{passive:false});
+cv.addEventListener('dblclick',e=>{const i=roomAt(e.clientX,e.clientY);userInput();if(i>=0){TOUR.i=i;flyTo(roomView(i),null,()=>settle(i));fly.user=1;}});
+addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;const k=e.key,step=Math.min(VW,VH)*.35/cam.z;
+  if(k==='c'||k==='C'){cardEnabled=!cardEnabled;if(cardEnabled&&settled>=0)showCard(settled);else if(!cardEnabled)hideCard(true);return;}
+  const moves={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+  if(moves[k]){userInput();fly=null;vel.x+=moves[k][0]*step*2.2;vel.y+=moves[k][1]*step*2.2;e.preventDefault();}
+  else if(k==='+'||k==='='){userInput();const z=clamp(cam.z*1.4,zMin(),zMax());flyTo({x:cam.x,y:cam.y,z},.45);fly.user=1;}
+  else if(k==='-'||k==='_'){userInput();const z=clamp(cam.z/1.4,zMin(),zMax());flyTo({x:cam.x,y:cam.y,z},.45);fly.user=1;}
+  else if(k==='0'){userInput();flyTo({x:SW/2,y:SH/2,z:fitSheetZ()},1.2);fly.user=1;}
+});
+function stepInertia(dt){if(ptrs.size||fly)return;const sp=Math.hypot(vel.x,vel.y);if(sp<.5/cam.z){vel.x=vel.y=0;return;}
+  cam.x+=vel.x*dt;cam.y+=vel.y*dt;const f=Math.exp(-dt*4);vel.x*=f;vel.y*=f;clampCam();dirty=true;lastInput=now();}
+
+/* =====================================================================
+   12. The chapter card
+   ===================================================================== */
+const card=document.getElementById('card'),cardGrain=card.querySelector('canvas');let cardEnabled=true,cardRoom=-1;
+const ROMAN=r=>r.n;
+function settle(i){settled=i;showCard(i);}
+function showCard(i){if(!cardEnabled)return;const r=ROOMS[i],acc=INKS[r.accent].hex;
+  if(cardRoom!==i){cardRoom=i;card.style.setProperty('--a',acc);
+    const c=[...r.quote],q='<span class="dc">“'+c[0]+'</span>'+c.slice(1).join('')+'”';
+    card.querySelector('.in').innerHTML=`<p class="ch">Chapter ${ROMAN(r)}</p><h1>${r.title}</h1><div class="orn" aria-hidden="true"><span>❦</span></div><blockquote><p>${q}</p></blockquote>`+
+      (r.meta.length?`<p class="meta">${r.meta.join('<br>')}</p>`:'')+(r.links.length?`<p class="links">${r.links.map(([l,u])=>`<a href="${u}" target="_blank" rel="noopener">${l}</a>`).join('<span>·</span>')}</p>`:'');}
+  card.classList.add('on');requestAnimationFrame(paintCard);}
+function hideCard(){card.classList.remove('on');settled=-1;}
+function paintCard(){const w=card.offsetWidth,h=card.offsetHeight,d=Math.min(2,devicePixelRatio||1);cardGrain.width=w*d;cardGrain.height=h*d;
+  const c=cardGrain.getContext('2d'),pen=new Pen(c,d*R1*1.4,1,0,0,0),pa=new Path2D();pa.rect(0,0,w*d,h*d);pen.paper(pa,'nonzero');
+  const r=ROOMS[cardRoom];if(!r)return;const band=new Path2D();band.rect(0,0,w*d,7*d);pen.ink(band,r.accent,1,'nonzero');
+  const dots=new Path2D();dots.rect(0,7*d,w*d,5*d);pen.ink(dots,r.accent,.35,'nonzero');}
+
+/* =====================================================================
+   13. Frame loop
+   ===================================================================== */
+const BG='#2c2a28';let lastT=now(),lastTick=-1,lastBoil=-1;
+const base=mkCanvas(2,2),bctx=base.getContext('2d');let baseKey='',bakeVer=0;
+function render(t){
+  const W=cv.width,H=cv.height,s=cam.z*DPR,sx=x=>(x-cam.x)*s+W/2,sy=y=>(y-cam.y)*s+H/2;
+  const kp=clamp(Math.round(s/R1),1,KMAX),boil=Math.floor(t*BOILHZ)%3,need=clamp(Math.ceil(s/R1-.25),1,KMAX);
+  let revealing=false;const vis=[];
+  for(const r of ROOMS){const rx=sx(r.x),ry=sy(r.y),rw=CW*s,rh=CH*s;if(rx>W||ry>H||rx+rw<0||ry+rh<0)continue;
+    if(need>1&&r.ready&&TOUR.started)for(let v=0;v<3;v++)want(r,need,v,v===0);
+    const start=r.ready?Math.max(r.ready,T0+.7+r.i*.22):1e9,rv=clamp((t-start)/1.1,0,1);if(rv>0&&rv<1)revealing=true;
+    vis.push({r,rx,ry,rw,rh,rv});}
+  const key=[W,H,cam.x,cam.y,cam.z,boil,bakeVer].join()+(revealing?t:'');
+  if(key!==baseKey){baseKey=key;if(base.width!==W||base.height!==H){base.width=W;base.height=H;}
+    const c=bctx;c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='source-over';c.fillStyle=BG;c.fillRect(0,0,W,H);
+    c.fillStyle='rgba(0,0,0,.4)';c.fillRect(sx(16),sy(22),SW*s,SH*s);
+    const pen=new Pen(c,s,kp,boil,sx(0),sy(0)),pa=new Path2D();pa.rect(sx(0),sy(0),SW*s,SH*s);pen.paper(pa,'nonzero');
+    for(const op of CHROME)play(op,pen);
+    c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
+    for(const {r,rx,ry,rw,rh,rv} of vis){if(rv<=0)continue;const img=pickBake(r,need,boil);if(!img)continue;
+      if(rv<1){c.save();c.beginPath();c.rect(rx,ry,rw,rh*smooth(rv));c.clip();c.drawImage(img,rx,ry,rw,rh);c.restore();
+        c.fillStyle='rgba(61,85,136,.35)';c.fillRect(rx,ry+rh*smooth(rv)-2*DPR,rw,2*DPR);}
+      else c.drawImage(img,rx,ry,rw,rh);}
+  }
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='source-over';ctx.drawImage(base,0,0);
+  // people: each room's figures are drawn on twos into a layer that shares the room's dot screen
+  const tick=Math.floor(t*12),tq=tick/12,sL=kp*R1;
+  for(const r of ROOMS)if(r.fl&&!vis.some(v=>v.r===r))r.fl=null;
+  for(const {r,rx,ry,rw,rh,rv} of vis){if(rv<1)continue;
+    const flat=150*FIGSC*s<80,fk=tick+'|'+boil+'|'+kp+flat;
+    if(!r.fl||r.fl.k!==kp){r.fl=mkCanvas(CW*sL,CH*sL);r.fl.k=kp;r.flKey='';}
+    if(r.flKey!==fk){r.flKey=fk;const c=r.fl.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,r.fl.width,r.fl.height);
+      const fp=new Pen(c,sL,kp,boil,0,0);fp.ds=s;fp.flat=flat;
+      const list=r.figs.map(F=>{const a=figAt(F,tq);return{F,d:a.x+a.y};}).sort((a,b)=>a.d-b.d);
+      for(const {F} of list)drawFig(fp,F,tq);}
+    ctx.drawImage(r.fl,rx,ry,rw,rh);}
+  return revealing;
+}
+function loop(){
+  const t=now(),dt=Math.min(.05,t-lastT);lastT=t;
+  stepFly();stepInertia(dt);stepTour();
+  if(TOUR.paused&&!fly&&!ptrs.size&&t-lastInput>.7&&settled<0&&!manualSettleAt){manualSettleAt=t;const i=roomAt(VW/2,VH/2);
+    if(i>=0&&cam.z>=roomView(i).z*.7)settle(i);}
+  const baked=stepBake(TOUR.started?7:14);
+  const tick=Math.floor(t*12),boil=Math.floor(t*BOILHZ);
+  if(baked)bakeVer++;
+  if(dirty||baked||tick!==lastTick||boil!==lastBoil){dirty=render(t);lastTick=tick;lastBoil=boil;}
+  requestAnimationFrame(loop);
+}
+function start(){
+  recordRooms();resize();
+  Object.assign(cam,{x:SW/2,y:SH/2,z:fitSheetZ()});
+  ROOMS.forEach(r=>want(r,1,0));ROOMS.forEach(r=>{want(r,1,1);want(r,1,2);});
+  T0=now();addEventListener('resize',resize);requestAnimationFrame(loop);
+}
+start();
+</script>
+</body>
+</html>
