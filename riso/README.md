@@ -4,7 +4,7 @@ A portfolio drawn entirely in code as a risograph sheet. Twelve isometric rooms,
 
 Open `index.html` in any modern browser. That's the whole site.
 
-- **Size:** 100553 bytes, one file
+- **Size:** 103539 bytes, one file
 - **Network:** exactly one request (the page itself). No images, data-URI images, font files, libraries or external scripts. Canvas 2D only.
 - **Text:** the only text on the page is the chapter card, set in system serif fonts.
 
@@ -21,6 +21,8 @@ Open `index.html` in any modern browser. That's the whole site.
 | `C` | Show or hide the chapter card |
 
 Any input pauses the tour. It picks up again from wherever you are after a few quiet seconds.
+
+If your system asks for reduced motion, the camera flies are shorter with no zoom swoop, the card fades without sliding and the linework boils more slowly.
 
 ## The rooms
 
@@ -62,8 +64,8 @@ Every other colour on the sheet (greens, oranges, browns, purples) only exists w
 4. **Misregistration.** Each plate is shifted by its own small offset, so edges show slivers of paper on one side and overlap on the other, and the registration marks in the margins fringe in four colours.
 5. **Paper and ink density.** The paper is a seeded tile of grain and fibres. After a room is printed, a soft mottle pass lifts the ink unevenly, the way a drum runs slightly dry.
 6. **Boiling linework.** Lines are filled, tapered strokes lifted at corners like a hand contour. Every point passes through a displacement field keyed to a boil variant. Each room is baked in three variants and they cycle at 3 Hz, so the linework breathes like animation on twos. All randomness is seeded, so the sheet draws the same way on every load.
-7. **People.** Figures share one skeleton (about 7.5 heads tall) with keyframed pose clips: walk, sit, type, read, drink, write, point, teach at the board, raise a hand, game, cheer, press, feed paper, think and sleep. Bodies are tapered volumes for limbs, a spine-driven torso and a three-quarter head, then dressed in shirts, hoodies, coats, skirts, a graduation gown and cap. Faces get brows, eyes, a nose, a mouth and ears up close. They follow looping paths through their rooms and are redrawn on twos (12 fps) into a layer that shares the room's dot screen.
-8. **Performance.** Rooms are recorded once as drawing operations and baked into cached bitmaps a slice at a time per frame, at a level of detail chosen by zoom (up to three), with only the nearest high-resolution rooms kept in memory. The paper, margins and rooms are cached as one layer and only redrawn when the camera or boil frame changes. People are the only thing redrawn on a timer.
+7. **People.** Figures share one skeleton (about 7.5 heads tall) with keyframed pose clips: walk, sit, type, read, drink, write, point, teach at the board, raise a hand, game, cheer, press, feed paper, think and sleep. Bodies are tapered volumes for limbs, a spine-driven torso and a three-quarter head, then dressed in shirts, hoodies, coats, skirts, a graduation gown and cap. Limbs and torsos carry a band of shadow on the side away from the light, and clothes get collars, buttons, pockets and folds. Faces get brows, eyes, a nose, a mouth and ears up close. They follow looping paths through their rooms and are redrawn on twos (12 fps) into a layer that shares the room's dot screen.
+8. **Performance.** Rooms are recorded once as drawing operations and baked into cached bitmaps a slice at a time per frame, at a level of detail chosen by zoom (up to three), with only the nearest high-resolution rooms kept in memory (three, or two on a phone). The paper, margins and rooms are cached as one layer and only redrawn when the camera or boil frame changes. People are the only thing redrawn on a timer.
 
 ## Where it lives
 
