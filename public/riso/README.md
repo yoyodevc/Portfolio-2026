@@ -69,4 +69,4 @@ Every other colour on the sheet (greens, oranges, browns, purples) only exists w
 
 ## Where it lives
 
-This folder is self-contained and does not touch the React site. To make it the main site, serve `riso/index.html` as the root page, or copy it to `public/riso/index.html` to publish it at `/riso/` alongside the current build.
+This folder sits in `public/`, so Vite copies it into the build as is and the page is published at `/riso/` next to the React site, which it does not touch. To make it the main site instead, serve `index.html` from this folder as the root page.
